@@ -1,85 +1,185 @@
+"use strict";
+
 const http = require("node:http");
 const { randomUUID } = require("node:crypto");
 
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "127.0.0.1";
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
-const API_KEY = process.env.API_KEY || "";\nconst API_KEY = process.env.API_KEY || "";
-let latest = null;
+const API_KEY = process.env.API_KEY || "";
+const MAX_BODY_BYTES = 8 * 1024 * 1024;
 
-function send(res, status, body) {
-  const payload = JSON.stringify(body);
-  res.writeHead(status, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+if (HOST !== "127.0.0.1" && HOST !== "localhost" && HOST !== "::1" && !API_KEY) {
+  console.error("Refusing to listen on a public interface without API_KEY.");
+  process.exit(1);
+}
+
+let latest = null;
+let closing = false;
+
+function corsHeaders(origin) {
+  const allowed = ALLOWED_ORIGIN === "*" || origin === ALLOWED_ORIGIN;
+  return {
+    "Access-Control-Allow-Origin": allowed ? (ALLOWED_ORIGIN === "*" ? "*" : origin) : "null",
+    "Vary": "Origin",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Cache-Control": "no-store"
-  });
-  res.end(payload);
+  };
 }
-function readBody(req) {
+
+function sendJson(res, status, body, origin) {
+  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", ...corsHeaders(origin) });
+  res.end(JSON.stringify(body));
+}
+
+function isAuthorized(req) {
+  return !API_KEY || req.headers.authorization === "Bearer " + API_KEY;
+}
+
+function readJson(req) {
   return new Promise((resolve, reject) => {
-    let data = "";
+    let size = 0;
+    const chunks = [];
     req.on("data", chunk => {
-      data += chunk;
-      if (data.length > 8 * 1024 * 1024) {
-        reject(new Error("Request body exceeds 8 MB"));
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
+        reject(new Error("Request body exceeds the 8 MB limit."));
         req.destroy();
+        return;
       }
+      chunks.push(chunk);
     });
     req.on("end", () => {
-      try { resolve(JSON.parse(data || "{}")); }
-      catch { reject(new Error("Request body must be valid JSON")); }
+      try {
+        const raw = Buffer.concat(chunks).toString("utf8");
+        resolve(JSON.parse(raw || "{}"));
+      } catch {
+        reject(new Error("Request body must be valid JSON."));
+      }
     });
     req.on("error", reject);
   });
 }
+
+function openAIError(res, status, message, origin, type = "invalid_request_error") {
+  sendJson(res, status, { error: { message, type } }, origin);
+}
+
+function makeCompletion(body, captureId) {
+  const content = "Janitor Extractor received your request. This is a local mock response; no AI provider was called.";
+  return {
+    id: "chatcmpl-" + captureId,
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: body.model || "extractor-mock",
+    choices: [{ index: 0, message: { role: "assistant", content }, finish_reason: "stop" }],
+    usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+  };
+}
+
+function sendStream(res, completion, origin) {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    "Connection": "keep-alive",
+    ...corsHeaders(origin)
+  });
+  const choice = completion.choices[0];
+  const chunks = [
+    { id: completion.id, object: "chat.completion.chunk", created: completion.created, model: completion.model,
+      choices: [{ index: 0, delta: { role: "assistant" }, finish_reason: null }] },
+    { id: completion.id, object: "chat.completion.chunk", created: completion.created, model: completion.model,
+      choices: [{ index: 0, delta: { content: choice.message.content }, finish_reason: null }] },
+    { id: completion.id, object: "chat.completion.chunk", created: completion.created, model: completion.model,
+      choices: [{ index: 0, delta: {}, finish_reason: "stop" }] }
+  ];
+  for (const chunk of chunks) res.write("data: " + JSON.stringify(chunk) + "\n\n");
+  res.end("data: [DONE]\n\n");
+}
+
 const server = http.createServer(async (req, res) => {
+  const origin = req.headers.origin || "";
   const url = new URL(req.url, "http://localhost");
+
   if (req.method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization"
-    });
+    const headers = corsHeaders(origin);
+    if (headers["Access-Control-Allow-Origin"] === "null") {
+      res.writeHead(403, headers);
+      return res.end();
+    }
+    res.writeHead(204, headers);
     return res.end();
   }
+
+  if (corsHeaders(origin)["Access-Control-Allow-Origin"] === "null") {
+    return sendJson(res, 403, { error: "Origin not allowed." }, origin);
+  }
+
+  if (!isAuthorized(req)) {
+    return openAIError(res, 401, "Invalid or missing receiver API key.", origin, "authentication_error");
+  }
+
   if (req.method === "GET" && url.pathname === "/health") {
-    return send(res, 200, { ok: true, mode: "temporary in-memory capture", hasRequest: !!latest });
+    return sendJson(res, 200, {
+      ok: true, mode: "temporary in-memory capture", hasRequest: !!latest,
+      authenticated: !!API_KEY, api: "OpenAI-compatible mock"
+    }, origin);
   }
+
   if (req.method === "GET" && url.pathname === "/api/latest") {
-    return send(res, 200, latest || {});
+    return sendJson(res, 200, latest || {}, origin);
   }
+
   if (req.method === "POST" && url.pathname === "/api/clear") {
     latest = null;
-    return send(res, 200, { ok: true });
+    return sendJson(res, 200, { ok: true, cleared: true }, origin);
   }
-  if (req.method === "POST" && (url.pathname === "/v1/chat/completions" || url.pathname === "/chat/completions")) {
+
+  if (req.method === "GET" && url.pathname === "/v1/models") {
+    return sendJson(res, 200, {
+      object: "list",
+      data: [{ id: "extractor-mock", object: "model", created: 0, owned_by: "janitor-extractor" }]
+    }, origin);
+  }
+
+  if (req.method === "POST" && ["/v1/chat/completions", "/chat/completions"].includes(url.pathname)) {
     try {
-      if (API_KEY && req.headers.authorization !== "Bearer " + API_KEY) {\n        return send(res, 401, { error: { message: "Invalid API key", type: "authentication_error" } });\n      }\n      if (API_KEY && req.headers.authorization !== "Bearer " + API_KEY) {
-        return send(res, 401, { error: { message: "Invalid API key", type: "authentication_error" } });
+      const body = await readJson(req);
+      if (!Array.isArray(body.messages)) {
+        return openAIError(res, 400, "The request must include a messages array.", origin);
       }
-      const body = await readBody(req);
-      latest = { id: randomUUID(), receivedAt: new Date().toISOString(), request: body };
-      const content = "Janitor Extractor local capture received your request. This is a mock response; no AI provider was called.";
-      return send(res, 200, {
-        id: "chatcmpl-" + latest.id,
-        object: "chat.completion",
-        created: Math.floor(Date.now() / 1000),
-        model: body.model || "extractor-mock",
-        choices: [{ index: 0, message: { role: "assistant", content }, finish_reason: "stop" }],
-        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
-      });
+      const captureId = randomUUID();
+      latest = {
+        id: captureId,
+        receivedAt: new Date().toISOString(),
+        request: body
+      };
+      const completion = makeCompletion(body, captureId);
+      if (body.stream === true) return sendStream(res, completion, origin);
+      return sendJson(res, 200, completion, origin);
     } catch (error) {
-      return send(res, 400, { error: { message: error.message, type: "invalid_request_error" } });
+      if (!res.headersSent && !res.destroyed) {
+        return openAIError(res, 400, error.message, origin);
+      }
     }
   }
-  return send(res, 404, { error: "Not found" });
+
+  return sendJson(res, 404, { error: "Not found" }, origin);
 });
+
 server.listen(PORT, HOST, () => {
-  console.log("Janitor Extractor receiver listening on http://" + HOST + ":" + PORT);
-  console.log("POST /v1/chat/completions · GET /api/latest · POST /api/clear");
+  const address = server.address();
+  console.log("Janitor Extractor receiver listening on http://" + HOST + ":" + address.port);
+  console.log("GET /health · GET /api/latest · POST /api/clear · POST /v1/chat/completions");
 });
-process.on("SIGINT", () => { latest = null; server.close(() => process.exit(0)); });
-process.on("SIGTERM", () => { latest = null; server.close(() => process.exit(0)); });
+
+function shutdown() {
+  if (closing) return;
+  closing = true;
+  latest = null;
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 3000).unref();
+}
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
