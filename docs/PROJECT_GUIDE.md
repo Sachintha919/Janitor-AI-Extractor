@@ -23,7 +23,7 @@ The URL button validates and opens a Janitor AI character URL. It does not read 
 
 Supported common definition keys include name, description, personality, scenario, first_mes, alternate_greetings, mes_example, creator_notes, system_prompt, post_history_instructions, creator, character_version and tags. Character Card V2-shaped JSON is supported; other nested schemas may need manual adjustment.
 
-Assets are found only in supplied data. HTTP image downloads may be blocked by the remote host's CORS policy. Lorebook/world-info objects are exported as JSON. ZIP export includes image resources that the browser can fetch and all imported lorebook objects.
+PNG character-card metadata is parsed from supported embedded text chunks where available. Standalone images can also be imported as assets. Assets are found only in supplied data. HTTP image downloads may be blocked by the remote host's CORS policy. Lorebook/world-info objects are exported as JSON. ZIP export includes image resources that the browser can fetch and all imported lorebook objects.
 
 The HTML preview uses a sandboxed iframe without script execution. HTML and CSS are exported separately. It does not claim to extract private server-side source or live-page computed styles.
 
@@ -74,6 +74,8 @@ Run:
 ```bash
 npm run check
 ```
+
+GitHub Actions validates JavaScript syntax and runs a local receiver smoke test on pushes and pull requests.
 
 This checks JavaScript syntax. A real end-to-end Janitor AI test still requires configuring a reachable endpoint in Janitor AI and sending an authorized test message.
 
