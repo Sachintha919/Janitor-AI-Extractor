@@ -87,6 +87,16 @@ The user configures their own compatible endpoint in Janitor AI, opens an author
 - Do not store account passwords, session cookies, authorization headers, API keys or unrelated private chat history.
 - Clear temporary capture data when the session is cleared or the local receiver stops.
 
+## 🧪 Run the local prompt receiver
+
+GitHub Pages can host the static interface, but it cannot receive API requests. The prompt receiver is a separate Node.js process. Install Node.js 18 or newer, then run:
+
+```bash
+npm start
+```
+
+The receiver listens on `http://127.0.0.1:8787`. Open the Prompt Capture tab and choose **Check connection**. If the chat client runs remotely, localhost will not be reachable from it; you need a secure HTTPS tunnel or a hosted receiver. Never expose the receiver publicly without setting an `API_KEY` environment variable and configuring the same bearer key in the client where supported. The receiver returns a mock reply, does not call an AI provider, and keeps only the latest request in memory.
+
 ## 🚧 Development status
 
 This repository is an **early UI prototype**. The checklist below is intentionally honest about what is and is not implemented yet.
@@ -98,13 +108,19 @@ This repository is an **early UI prototype**. The checklist below is intentional
 | Normal / Prompt Capture navigation | ✅ Implemented |
 | Definitions / Assets / Card Design tabs | ✅ Implemented |
 | Character URL validation and open-in-new-tab | ✅ Implemented |
+| Manual JSON / HTML / text / file import | ✅ Implemented |
+| Definition editing and TXT / JSON / Character Card JSON export | ✅ Implemented |
+| Asset URL and lorebook discovery from imported data | ✅ Implemented |
+| Individual asset and lorebook downloads | ✅ Implemented |
+| HTML / CSS preview and export | ✅ Implemented |
+| Local OpenAI-compatible mock request receiver | ✅ Implemented |
+| Live request polling and TXT / JSON export | ✅ Implemented |
+| ZIP export for downloadable assets and lorebooks | ✅ Implemented |
 | Browser extension and signed-in page connector | ⏳ Planned |
 | Automatic visible-field extraction | ⏳ Planned |
 | Asset and lorebook extraction | ⏳ Planned |
 | Rendered HTML/CSS inspection | ⏳ Planned |
-| Local compatible prompt receiver | ⏳ Planned |
-| Live request display and prompt parser | ⏳ Planned |
-| TXT / JSON / HTML / CSS / ZIP downloads | ⏳ Planned |
+| Automatic extraction from signed-in character page | ⏳ Brave extension later |
 | GitHub Pages deployment verification | ⏳ Pending |
 
 A visible button or preview in the current UI may be disabled until its underlying connector is implemented.
