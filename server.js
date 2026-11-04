@@ -2,12 +2,54 @@
 
 const http = require("node:http");
 const { randomUUID } = require("node:crypto");
+const path = require("node:path");
+const { readFile } = require("node:fs/promises");
 
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "127.0.0.1";
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 const API_KEY = process.env.API_KEY || "";
 const MAX_BODY_BYTES = 8 * 1024 * 1024;
+const STATIC_ROOT = path.resolve(__dirname);
+const MIME_TYPES = {
+  ".html":"text/html; charset=utf-8",
+  ".css":"text/css; charset=utf-8",
+  ".js":"text/javascript; charset=utf-8",
+  ".svg":"image/svg+xml",
+  ".png":"image/png",
+  ".jpg":"image/jpeg",
+  ".jpeg":"image/jpeg",
+  ".webp":"image/webp",
+  ".gif":"image/gif",
+  ".json":"application/json; charset=utf-8",
+  ".txt":"text/plain; charset=utf-8",
+  ".ico":"image/x-icon"
+};
+
+async function serveStatic(res, url) {
+  let pathname;
+  try { pathname = decodeURIComponent(url.pathname); }
+  catch { res.writeHead(400); return res.end("Bad request"); }
+  const relative = pathname === "/" ? "index.html" : pathname.replace(/^\\/+/, "");
+  const filePath = path.resolve(STATIC_ROOT, relative);
+  if (filePath !== STATIC_ROOT && !filePath.startsWith(STATIC_ROOT + path.sep)) {
+    res.writeHead(403); return res.end("Forbidden");
+  }
+  try {
+    const data = await readFile(filePath);
+    const type = MIME_TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream";
+    res.writeHead(200, {
+      "Content-Type": type,
+      "X-Content-Type-Options": "nosniff",
+      "Cache-Control": type.startsWith("text/html") ? "no-cache" : "public, max-age=300"
+    });
+    res.end(data);
+  } catch (error) {
+    res.writeHead(error.code === "EISDIR" ? 404 : error.code === "ENOENT" ? 404 : 500);
+    res.end("Not found");
+  }
+}
+
 
 if (HOST !== "127.0.0.1" && HOST !== "localhost" && HOST !== "::1" && !API_KEY) {
   console.error("Refusing to listen on a public interface without API_KEY.");
@@ -114,6 +156,11 @@ const server = http.createServer(async (req, res) => {
 
   if (corsHeaders(origin)["Access-Control-Allow-Origin"] === "null") {
     return sendJson(res, 403, { error: "Origin not allowed." }, origin);
+  }
+
+  const isApiPath = ["/health", "/api/latest", "/api/clear", "/v1/models", "/v1/chat/completions", "/chat/completions"].includes(url.pathname);
+  if (req.method === "GET" && !isApiPath) {
+    return serveStatic(res, url);
   }
 
   if (!isAuthorized(req)) {
