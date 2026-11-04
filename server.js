@@ -3,7 +3,8 @@ const { randomUUID } = require("node:crypto");
 
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "0.0.0.0";
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";\nconst API_KEY = process.env.API_KEY || "";
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
+const API_KEY = process.env.API_KEY || "";\nconst API_KEY = process.env.API_KEY || "";
 let latest = null;
 
 function send(res, status, body) {
@@ -56,7 +57,10 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === "POST" && (url.pathname === "/v1/chat/completions" || url.pathname === "/chat/completions")) {
     try {
-      if (API_KEY && req.headers.authorization !== "Bearer " + API_KEY) {\n        return send(res, 401, { error: { message: "Invalid API key", type: "authentication_error" } });\n      }\n      const body = await readBody(req);
+      if (API_KEY && req.headers.authorization !== "Bearer " + API_KEY) {\n        return send(res, 401, { error: { message: "Invalid API key", type: "authentication_error" } });\n      }\n      if (API_KEY && req.headers.authorization !== "Bearer " + API_KEY) {
+        return send(res, 401, { error: { message: "Invalid API key", type: "authentication_error" } });
+      }
+      const body = await readBody(req);
       latest = { id: randomUUID(), receivedAt: new Date().toISOString(), request: body };
       const content = "Janitor Extractor local capture received your request. This is a mock response; no AI provider was called.";
       return send(res, 200, {
