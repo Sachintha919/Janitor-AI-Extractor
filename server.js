@@ -2,7 +2,7 @@ const http = require("node:http");
 const { randomUUID } = require("node:crypto");
 
 const PORT = Number(process.env.PORT || 8787);
-const HOST = process.env.HOST || "0.0.0.0";
+const HOST = process.env.HOST || "127.0.0.1";
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 const API_KEY = process.env.API_KEY || "";\nconst API_KEY = process.env.API_KEY || "";
 let latest = null;
