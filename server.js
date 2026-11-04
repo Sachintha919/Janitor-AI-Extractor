@@ -30,7 +30,10 @@ async function serveStatic(res, url) {
   let pathname;
   try { pathname = decodeURIComponent(url.pathname); }
   catch { res.writeHead(400); return res.end("Bad request"); }
-  const relative = pathname === "/" ? "index.html" : pathname.replace(/^\\/+/, "");
+  const relative = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
+  if (!(relative === "index.html" || relative.startsWith("assets/") || relative === "favicon.ico")) {
+    res.writeHead(404); return res.end("Not found");
+  }
   const filePath = path.resolve(STATIC_ROOT, relative);
   if (filePath !== STATIC_ROOT && !filePath.startsWith(STATIC_ROOT + path.sep)) {
     res.writeHead(403); return res.end("Forbidden");
@@ -60,9 +63,9 @@ let latest = null;
 let closing = false;
 
 function corsHeaders(origin) {
-  const allowed = ALLOWED_ORIGIN === "*" || origin === ALLOWED_ORIGIN;
+  const allowed = !origin || ALLOWED_ORIGIN === "*" || origin === ALLOWED_ORIGIN;
   return {
-    "Access-Control-Allow-Origin": allowed ? (ALLOWED_ORIGIN === "*" ? "*" : origin) : "null",
+    "Access-Control-Allow-Origin": allowed ? (ALLOWED_ORIGIN === "*" ? "*" : (origin || ALLOWED_ORIGIN)) : "null",
     "Vary": "Origin",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
