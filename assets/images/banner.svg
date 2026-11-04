@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Janitor AI Extractor</title>
+  <desc id="desc">Animated purple and teal gradient banner for the Janitor AI Extractor project.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101a36"/>
+      <stop offset="0.55" stop-color="#171735"/>
+      <stop offset="1" stop-color="#092b35"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a99aff">
+        <animate attributeName="stop-color" values="#a99aff;#72e2cc;#a99aff" dur="8s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="1" stop-color="#72e2cc">
+        <animate attributeName="stop-color" values="#72e2cc;#a99aff;#72e2cc" dur="8s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#9a87ff" stop-opacity=".36"/>
+      <stop offset="1" stop-color="#9a87ff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="24"/></filter>
+  </defs>
+  <rect width="1200" height="360" rx="28" fill="url(#bg)"/>
+  <circle cx="970" cy="85" r="175" fill="url(#glow)" filter="url(#blur)">
+    <animate attributeName="cx" values="970;850;970" dur="13s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="1080" cy="310" r="150" fill="#49d6bd" opacity=".08" filter="url(#blur)">
+    <animate attributeName="cy" values="310;220;310" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <g fill="none" stroke="url(#accent)" opacity=".45">
+    <ellipse cx="960" cy="180" rx="145" ry="72" transform="rotate(-25 960 180)" stroke-width="1.5">
+      <animateTransform attributeName="transform" type="rotate" from="-25 960 180" to="335 960 180" dur="36s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="960" cy="180" rx="105" ry="125" transform="rotate(35 960 180)" stroke-width="1.2" stroke-dasharray="5 8">
+      <animateTransform attributeName="transform" type="rotate" from="35 960 180" to="-325 960 180" dur="42s" repeatCount="indefinite"/>
+    </ellipse>
+  </g>
+  <g transform="translate(842 133)">
+    <rect width="96" height="96" rx="27" fill="#9886ff" fill-opacity=".16" stroke="#b8aaff" stroke-opacity=".55"/>
+    <path d="M29 36h7v25h-7zM45 25h7v47h-7zM61 43h7v18h-7z" fill="url(#accent)"/>
+    <circle cx="48" cy="48" r="63" fill="none" stroke="#a89aff" stroke-opacity=".22">
+      <animate attributeName="r" values="58;70;58" dur="5s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-opacity" values=".28;.06;.28" dur="5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="76" y="112" fill="#a99aff" font-size="15" font-weight="700" letter-spacing="5">OPEN-SOURCE BROWSER WORKSPACE</text>
+    <text x="72" y="190" fill="#f4f3ff" font-size="57" font-weight="700" letter-spacing="-2">Janitor AI</text>
+    <text x="72" y="252" fill="url(#accent)" font-size="57" font-weight="700" letter-spacing="-2">Extractor</text>
+    <text x="77" y="296" fill="#b3bfd8" font-size="18">Inspect. Organize. Export.</text>
+  </g>
+  <g fill="#d7d0ff">
+    <circle cx="790" cy="73" r="3"><animate attributeName="opacity" values=".25;1;.25" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="1080" cy="85" r="4"><animate attributeName="opacity" values="1;.2;1" dur="4s" repeatCount="indefinite"/></circle>
+    <circle cx="1100" cy="245" r="3"><animate attributeName="opacity" values=".2;1;.2" dur="2.7s" repeatCount="indefinite"/></circle>
+    <path d="M760 260l4 9 9 4-9 4-4 9-4-9-9-4 9-4z" opacity=".7"/>
+    <path d="M1130 145l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" opacity=".65"/>
+  </g>
+</svg>
