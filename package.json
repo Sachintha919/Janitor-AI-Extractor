@@ -1,0 +1,13 @@
+{
+  "name": "janitor-ai-extractor",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Browser workspace and temporary OpenAI-compatible request inspector",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
