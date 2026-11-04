@@ -1,199 +1,173 @@
-<!--
-  Animated SVG banner is intentionally kept as a separate asset.
-  GitHub README markdown does not execute custom CSS or JavaScript.
--->
-<p align="center">
-  <img src="assets/images/banner.svg" alt="Janitor AI Extractor — Inspect. Organize. Export." width="100%">
-</p>
+<!-- Animated SVG banner: GitHub README does not execute custom CSS or JavaScript. -->
+<p align="center"><img src="assets/images/banner.svg" alt="Janitor AI Extractor — Inspect. Organize. Export." width="100%"></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-early%20development-9b8cff?style=for-the-badge" alt="Early development">
+  <img src="https://img.shields.io/badge/status-functional%20prototype-9b8cff?style=for-the-badge" alt="Functional prototype">
   <img src="https://img.shields.io/badge/browser-Brave%20%2F%20Chromium-66d9c0?style=for-the-badge" alt="Brave and Chromium">
   <img src="https://img.shields.io/badge/license-MIT-8da2fb?style=for-the-badge" alt="MIT License">
 </p>
 
-<p align="center">
-  <strong>A clean browser workspace for character-page inspection, asset collection, card-design review and a separate prompt-capture workflow.</strong>
-</p>
+<p align="center"><strong>A temporary browser workspace for organizing accessible character data, assets, card markup and API requests.</strong></p>
 
 ---
 
-## ✨ Project overview
+## ✨ What this project does
 
-**Janitor AI Extractor** is a browser-focused project with two intentionally separate workflows:
+Janitor AI Extractor has two separate workflows:
 
-| Workspace | Purpose |
-|---|---|
-| **Normal extraction** | Open a character page through the user's signed-in Brave browser session and inspect information the page/session makes available. |
-| **Prompt capture** | A separate, manually triggered workflow that inspects requests sent to an endpoint configured by the user, for characters and content they own or are authorized to inspect. |
+1. **Normal extraction workspace** — import character data that you can access, review and edit its fields, inspect imported assets/lorebooks, and export files.
+2. **Prompt capture workspace** — point Janitor AI to your own compatible receiver, send a test message, and inspect the request that the service actually sends.
 
-The project is designed around temporary capture and user-initiated downloads. A permanent character database is not part of the current plan.
+A permanent character database is not used. Imported data stays in the active browser tab; prompt requests stay in the receiver process memory until cleared or the process stops.
 
-## 🧭 Planned features
+## 🧩 Features in the current build
 
-### 1. Normal extraction
+### Definitions
+- Import Character Card JSON (including common V2-style `data` objects), JSON, HTML, text, or local `.json`, `.txt`, `.html`, and `.htm` files.
+- Detect common fields: name, description, personality, scenario, first message, alternate greetings, example dialogue, creator notes, system prompt, post-history instructions, creator, version and tags.
+- Edit detected fields before exporting.
+- Export as TXT, normalized JSON, or a Character Card V2-shaped JSON file.
 
-Paste a character URL and use the Brave extension to open/inspect the page in the existing signed-in browser session.
+### Assets
+- Find image URLs and embedded base64 image data in imported JSON/HTML.
+- Preview and download individual images when the browser/image host permits it.
+- Detect lorebook / world-info objects and export them as JSON.
+- Create a ZIP archive containing imported lorebook JSON and image files that permit browser fetching.
 
-- Character name and description
-- Personality and scenario **when made available to the signed-in page/session**
-- First message and alternate greetings
-- Example dialogues and other accessible definition fields
-- Field-level source and availability indicators
+**Browser limitation:** some image hosts block cross-origin downloads. Those files may need to be opened at their original URL and saved manually. This importer does not crawl private APIs or hidden resources.
 
-### 2. Assets
+### Character card design
+- Import/paste HTML and CSS separately, or parse a supplied HTML document.
+- Preview HTML in a sandboxed iframe (scripts are not executed).
+- Edit and export HTML and CSS separately.
 
-- Character avatar and accessible gallery images
-- Lorebooks and entries available to the signed-in user
-- Other accessible character-related files
-- Individual downloads and a download-all archive
+The workspace can inspect only the markup and styles supplied to it. Automatic inspection of the signed-in Janitor AI page, its rendered DOM, and computed CSS requires the future Brave extension and is intentionally not included yet.
 
-### 3. Card design
+### Prompt capture
+The included Node.js receiver accepts OpenAI-compatible chat-completion requests at:
+- `POST /v1/chat/completions`
+- `POST /chat/completions`
 
-- Rendered character-card HTML structure
-- Browser-accessible CSS and computed styles
-- HTML/CSS preview
-- Separate HTML and CSS exports
+It stores the latest request in process memory and returns a mock completion. Streaming requests (`stream: true`) receive a compatible Server-Sent Events response. The receiver also provides:
+- `GET /health`
+- `GET /api/latest`
+- `POST /api/clear`
+- `GET /v1/models`
 
-> The browser can inspect rendered DOM and styles available to the page. It cannot guarantee access to private server-side source files or resources the account/page does not expose.
+The Prompt Capture tab can connect, poll for new requests, display message roles/content and selected request metadata, and export the captured request as TXT or JSON. The manual request-import box works without running the receiver.
 
-### 4. Prompt capture — separate workflow
+**Important:** the capture tab can display only the request content that Janitor AI actually transmits to the endpoint. It cannot reveal data omitted from the request or bypass creator privacy settings, authentication, or platform access controls. Use only your own characters or content you have permission to inspect.
 
-The user configures their own compatible endpoint in Janitor AI, opens an authorized test chat and manually sends a message. The local receiver can inspect the request that Janitor AI actually sends to that endpoint.
+## 🚀 Run locally
 
-- Incoming-request status and request inspection
-- Display relevant prompt sections in the web interface
-- TXT and JSON download actions
-- Optional response forwarding can be considered separately
-
-**Important limits:** the receiver can inspect only content actually sent to it. A hidden-field marker or token count is not the hidden text itself. This workflow is for the user's own characters or content they have permission to inspect; it is not intended to bypass creator privacy choices or access controls.
-
-## 📦 Export formats
-
-| Data | Planned format |
-|---|---|
-| Definitions | TXT, JSON |
-| Captured request | TXT, JSON |
-| Character images | Original image files |
-| Card design | HTML, CSS |
-| Multiple assets | ZIP archive |
-| Normalized character card | Character Card JSON format (format compatibility to be implemented and tested) |
-
-## 🔒 Data handling
-
-- No permanent character database planned.
-- Keep captured data in temporary browser/server memory only.
-- Downloads are initiated by the user.
-- Do not store account passwords, session cookies, authorization headers, API keys or unrelated private chat history.
-- Clear temporary capture data when the session is cleared or the local receiver stops.
-
-## 🧪 Run the local prompt receiver
-
-GitHub Pages can host the static interface, but it cannot receive API requests. The prompt receiver is a separate Node.js process. Install Node.js 18 or newer, then run:
-
-```bash
-npm start
-```
-
-The receiver listens on `http://127.0.0.1:8787`. Open the Prompt Capture tab and choose **Check connection**. If the chat client runs remotely, localhost will not be reachable from it; you need a secure HTTPS tunnel or a hosted receiver. Never expose the receiver publicly without setting an `API_KEY` environment variable and configuring the same bearer key in the client where supported. The receiver returns a mock reply, does not call an AI provider, and keeps only the latest request in memory.
-
-## 🚧 Development status
-
-This repository is an **early UI prototype**. The checklist below is intentionally honest about what is and is not implemented yet.
-
-| Component | Status |
-|---|---|
-| Responsive dark interface | ✅ Implemented |
-| Animated CSS effects | ✅ Implemented |
-| Normal / Prompt Capture navigation | ✅ Implemented |
-| Definitions / Assets / Card Design tabs | ✅ Implemented |
-| Character URL validation and open-in-new-tab | ✅ Implemented |
-| Manual JSON / HTML / text / file import | ✅ Implemented |
-| Definition editing and TXT / JSON / Character Card JSON export | ✅ Implemented |
-| Asset URL and lorebook discovery from imported data | ✅ Implemented |
-| Individual asset and lorebook downloads | ✅ Implemented |
-| HTML / CSS preview and export | ✅ Implemented |
-| Local OpenAI-compatible mock request receiver | ✅ Implemented |
-| Live request polling and TXT / JSON export | ✅ Implemented |
-| ZIP export for downloadable assets and lorebooks | ✅ Implemented |
-| Browser extension and signed-in page connector | ⏳ Planned |
-| Automatic visible-field extraction | ⏳ Planned |
-| Asset and lorebook extraction | ⏳ Planned |
-| Rendered HTML/CSS inspection | ⏳ Planned |
-| Automatic extraction from signed-in character page | ⏳ Brave extension later |
-| GitHub Pages deployment verification | ⏳ Pending |
-
-A visible button or preview in the current UI may be disabled until its underlying connector is implemented.
-
-## 🛠️ Technology
-
-- HTML5
-- CSS3 (responsive layout, motion and reduced-motion support)
-- Vanilla JavaScript
-- Brave / Chromium extension APIs (planned)
-- Node.js local request receiver (planned)
-- GitHub Pages for the static interface
-
-No external AI provider API key is required for the planned request-inspection prototype. A separate provider credential would only be needed if optional real-model forwarding is added later.
-
-## 🚀 Run the current UI locally
-
-Clone the repository:
+Requires Node.js 18 or newer.
 
 ```bash
 git clone https://github.com/Sachintha919/Janitor-AI-Extractor.git
 cd Janitor-AI-Extractor
+npm start
 ```
 
-Start a simple static server:
+Open the static interface with a local web server in a second terminal:
 
 ```bash
 python -m http.server 8000
 ```
 
-Open:
+Then visit `http://127.0.0.1:8000`. Open the **Prompt Capture** tab and connect to `http://127.0.0.1:8787`.
 
-```text
-http://127.0.0.1:8000
+Run the syntax check:
+
+```bash
+npm run check
 ```
 
-You can also open `index.html` directly, but using a local HTTP server is closer to the eventual deployment environment.
+### Configure Janitor AI
 
-## 🗂️ Current repository structure
+In the Janitor AI API settings, choose a compatible/custom OpenAI-style endpoint and set its base URL to:
+
+```text
+http://127.0.0.1:8787/v1
+```
+
+Use model name `extractor-mock` if a model name is required. The receiver returns a mock response and does not contact an AI provider. Send a test message, then return to Prompt Capture to inspect the request.
+
+A remote Janitor AI service generally cannot connect to your computer's `127.0.0.1`. If localhost is not reachable from Janitor AI, a secure HTTPS tunnel or hosted receiver is needed. Do not expose a receiver publicly without configuring a strong `API_KEY`.
+
+### Optional receiver security settings
+
+- `API_KEY`: bearer token required by the receiver. Use the same value in Janitor AI and the Prompt Capture access-key field.
+- `HOST`: defaults to `127.0.0.1`. Binding to a public interface is refused unless `API_KEY` is set.
+- `PORT`: defaults to `8787`.
+- `ALLOWED_ORIGIN`: defaults to `*` for simple local use. For a hosted deployment, set it to the exact origin of your interface.
+
+Example:
+
+```bash
+API_KEY="replace-with-a-long-random-secret" HOST="0.0.0.0" PORT=8787 ALLOWED_ORIGIN="https://your-site.example" npm start
+```
+
+Do not commit real keys to GitHub. Do not paste an API key into screenshots or public issue reports. The receiver does not save requests to disk, but captured prompt content can be sensitive while the process is running.
+
+## 🔒 Data handling and limitations
+
+- No database, account login, browser-cookie collection, or permanent character storage.
+- The static interface does not request Janitor AI passwords or session cookies.
+- The receiver stores only the latest JSON request in RAM; it clears on `/api/clear` or process shutdown.
+- The receiver does not store request headers or forward prompts to a model provider.
+- Downloads are initiated by the user.
+- The current normal workflow is manual import. URL validation opens the character page but does not read the signed-in page.
+- Automatic signed-in page reading, asset extraction from the live page, and live card DOM/CSS inspection are deferred until the separate Brave extension is built.
+
+## 📌 Development status
+
+| Feature | Current status |
+|---|---|
+| Animated responsive interface and navigation | Implemented |
+| Manual JSON / HTML / text / file import | Implemented |
+| Common character definition parsing and editing | Implemented; format coverage varies |
+| TXT, JSON and Character Card V2-shaped export | Implemented |
+| Image URL / embedded image discovery | Implemented for imported sources |
+| Individual image and lorebook downloads | Implemented; cross-origin restrictions apply |
+| ZIP export | Implemented for assets the browser can fetch |
+| Sandboxed HTML preview and HTML/CSS export | Implemented for supplied source |
+| Local OpenAI-compatible receiver | Implemented; mock response only |
+| Streaming mock response | Implemented |
+| Live polling and captured request TXT/JSON export | Implemented |
+| Automatic signed-in Janitor AI page inspection | Deferred: Brave extension |
+| Automatic live-page assets and card DOM/CSS inspection | Deferred: Brave extension |
+| Hosted receiver deployment and end-to-end Janitor AI verification | Not yet verified |
+| GitHub Pages deployment | Workflow configured; deployment must be checked in Actions |
+
+## 🛠️ Technology
+
+- HTML5, CSS3 and vanilla JavaScript
+- Node.js built-in HTTP module (no npm runtime dependencies)
+- GitHub Pages workflow for the static front end
+- Brave / Chromium extension planned as a separate future component
+
+## 🗂️ Repository layout
 
 ```text
 Janitor-AI-Extractor/
-├── .github/
-│   └── workflows/
-│       └── pages.yml
+├── .github/workflows/pages.yml
 ├── assets/
-│   ├── css/
-│   │   └── styles.css
-│   ├── images/
-│   │   └── banner.svg
-│   └── js/
-│       └── app.js
-├── docs/
-│   └── PROJECT_GUIDE.md
-├── .nojekyll
+│   ├── css/styles.css
+│   ├── images/banner.svg
+│   └── js/app.js
+├── docs/PROJECT_GUIDE.md
 ├── index.html
-└── LICENSE
+├── package.json
+├── server.js
+├── .nojekyll
+├── LICENSE
+└── README.md
 ```
-
-## 🧩 Roadmap
-
-1. Finish and verify the static interface.
-2. Build the Brave extension connector for normal page inspection.
-3. Add temporary capture state and download helpers.
-4. Build the local compatible endpoint for the separate prompt-capture workflow.
-5. Add parsing, live status and request display.
-6. Test asset and card-design exports.
-7. Verify GitHub Pages deployment.
 
 ## ⚖️ Responsible use
 
-Use this project only with content you own or have permission to inspect and download. Respect creator settings, platform rules, copyright and access restrictions. The project should report unavailable fields honestly rather than attempting to defeat protections.
+Use this project only with content you own or have permission to inspect and download. Respect creator choices, platform terms, copyright, and access restrictions. If a field is not made available to the page or request, the application should report it as unavailable rather than attempting to defeat a protection.
 
 ## 📄 License
 
-This project is distributed under the MIT License. See [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
