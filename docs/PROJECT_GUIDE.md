@@ -2,49 +2,81 @@
 
 ## Current architecture
 
-This project has a static browser interface and an optional Node.js request receiver.
+The project contains two separate parts:
 
-- The static interface can be deployed to GitHub Pages.
-- Manual import supports character-card JSON, copied definition text, HTML, and local JSON/text/HTML files.
-- Parsed definitions can be edited in the browser and exported as TXT, JSON, or Character Card V2-shaped JSON.
-- Imported asset links and lorebook objects can be reviewed and downloaded. Asset ZIP export includes resources the browser can fetch; cross-origin restrictions may prevent some images from being bundled.
-- Card HTML and CSS can be pasted/imported, previewed in a sandboxed iframe, and downloaded separately.
-- The Node receiver accepts OpenAI-compatible chat-completion POST requests, stores only the latest request in process memory, and returns a mock assistant response.
+- A static HTML/CSS/JavaScript workspace. It can be hosted on GitHub Pages.
+- A Node.js HTTP receiver for prompt-request inspection. GitHub Pages cannot host this receiver; run it locally or deploy it separately.
 
-## Normal extraction
+The browser workspace has no database and does not use localStorage. Imported data remains in page memory until refresh/close. The receiver holds only the latest request in process memory and clears it on request or process shutdown.
 
-The URL action only validates and opens a Janitor AI character page. It does not read the signed-in page. Until the separate Brave extension is developed, use the manual import panel and provide content that the signed-in user is authorized to access.
+## Normal extraction workspace
 
-The parser does not bypass page visibility controls, creator privacy settings, authentication, or server-side access controls. Fields that are not present in the supplied source remain unavailable.
+Until the separate Brave extension exists, the normal workflow is manual:
 
-## Prompt capture
+1. Open the character page in the signed-in Brave browser.
+2. Import a character-card JSON, copied accessible details, saved HTML, or a local text/JSON/HTML file.
+3. Review/edit detected definition fields.
+4. Review image and lorebook resources.
+5. Paste/import HTML and CSS in the Card Design tab, preview in the sandbox, and export the markup/styles.
 
-Run the receiver with Node.js 18+:
+The URL button validates and opens a Janitor AI character URL. It does not read the signed-in page. Browser same-origin rules prevent a static page on GitHub Pages from freely reading another site's authenticated page. The extension is the intended future bridge.
+
+Supported common definition keys include name, description, personality, scenario, first_mes, alternate_greetings, mes_example, creator_notes, system_prompt, post_history_instructions, creator, character_version and tags. Character Card V2-shaped JSON is supported; other nested schemas may need manual adjustment.
+
+Assets are found only in supplied data. HTTP image downloads may be blocked by the remote host's CORS policy. Lorebook/world-info objects are exported as JSON. ZIP export includes image resources that the browser can fetch and all imported lorebook objects.
+
+The HTML preview uses a sandboxed iframe without script execution. HTML and CSS are exported separately. It does not claim to extract private server-side source or live-page computed styles.
+
+## Prompt capture receiver
+
+Requires Node.js 18+. Run:
 
 ```bash
 npm start
 ```
 
-Default local endpoint: `http://127.0.0.1:8787`
+Default address: `http://127.0.0.1:8787`
 
 Endpoints:
-- `GET /health` — receiver health
+
+- `GET /health` — receiver status
 - `GET /api/latest` — latest captured request
-- `POST /api/clear` — clear latest capture
-- `POST /v1/chat/completions` — receive a compatible request and return a mock completion
+- `POST /api/clear` — clear the latest request
+- `GET /v1/models` — compatible mock model list
+- `POST /v1/chat/completions` — capture request and return a mock response
+- `POST /chat/completions` — alias for chat completion
 
-The receiver does not call an AI provider and does not save request data to disk. It clears its memory when the process stops. It binds to localhost by default.
+The receiver accepts JSON with a `messages` array, stores the latest request in RAM and returns a mock assistant response. When `stream: true`, it returns a small Server-Sent Events stream. No model API is called. It does not persist to disk.
 
-For a remote chat service to reach a local receiver, a secure tunnel or hosted service is required. Do not expose the receiver publicly without setting `API_KEY` and configuring the same bearer key in the client where supported. A public tunnel can expose sensitive prompt content; use only with content you are authorized to inspect.
+### Janitor AI endpoint setup
 
-## Data handling
+Use the custom/OpenAI-compatible API base URL:
 
-No character database or browser localStorage is used. Parsed data stays in page memory until the page is refreshed or closed. Prompt capture is held in receiver memory until cleared or the receiver stops. Downloads are user-initiated.
+```text
+http://127.0.0.1:8787/v1
+```
 
-## Development stages
+Choose `extractor-mock` if a model name is mandatory. A remote Janitor AI service normally cannot reach a computer's loopback address. If so, a secure HTTPS tunnel or separate hosted receiver is required. Configure the same strong bearer token in Janitor AI and the UI's Receiver access key field.
 
-1. Static responsive interface — implemented.
-2. Manual source import, parser, editor and exports — implemented.
-3. Local temporary compatible request receiver — implemented.
-4. Automated signed-in page inspection via Brave extension — intentionally deferred.
-5. More robust format compatibility and end-to-end testing — ongoing.
+### Environment variables
+
+- `PORT`: listening port, default `8787`.
+- `HOST`: default `127.0.0.1`. Public-interface binding is refused unless `API_KEY` is configured.
+- `API_KEY`: optional bearer key; required for non-local bind addresses.
+- `ALLOWED_ORIGIN`: exact front-end origin, or `*` for local development.
+
+Never commit secrets. Treat captured prompts as sensitive. Do not expose a public unauthenticated receiver.
+
+## Verification
+
+Run:
+
+```bash
+npm run check
+```
+
+This checks JavaScript syntax. A real end-to-end Janitor AI test still requires configuring a reachable endpoint in Janitor AI and sending an authorized test message.
+
+## Deferred work
+
+The Brave extension is intentionally not included in this phase. It will later provide authorized inspection of the signed-in page's rendered DOM and accessible assets. It must not bypass creator privacy settings, hidden server-side fields, or access controls.
