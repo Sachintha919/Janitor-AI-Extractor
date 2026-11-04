@@ -37,13 +37,15 @@ function parseSource(raw){
  if(!character.name){const m=raw.match(/<title[^>]*>([\s\S]*?)<\/title>/i);if(m)character.name=m[1].replace(/<[^>]+>/g,"").trim()}
  if(!character.description){const m=raw.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i);if(m)character.description=m[1]}
  const {assets,books}=obj?collectAssets(obj):{assets:[],books:[]};
+ let extractedHtml="", extractedCss="";
+ if(/<html|<body|<div|<section/i.test(raw)){try{const parsed=new DOMParser().parseFromString(raw,"text/html");extractedHtml=parsed.body?.innerHTML||raw;extractedCss=[...parsed.querySelectorAll("style")].map(x=>x.textContent).join("\n\n");}catch{extractedHtml=raw;}}
  const imageMatches=[...raw.matchAll(/(?:src|content|href)=["'](https?:\/\/[^"']+\.(?:png|jpe?g|gif|webp|avif)(?:\?[^"']*)?)["']/gi)];
  for(const m of imageMatches)if(!assets.some(a=>a.url===m[1]))assets.push({url:m[1],label:"Image",source:"HTML"});
  const loreMatch=raw.match(/<script[^>]+id=["'][^"']*(?:lore|world)[^"']*["'][^>]*>([\s\S]*?)<\/script>/i);
  if(loreMatch){try{books.push({name:"Embedded lorebook",data:JSON.parse(loreMatch[1])})}catch{}}
  const htmlMatch=raw.match(/<!--[\s\S]*?CARD_HTML_START[\s\S]*?-->([\s\S]*?)<!--[\s\S]*?CARD_HTML_END[\s\S]*?-->/i);
  const cssMatch=raw.match(/<!--[\s\S]*?CARD_CSS_START[\s\S]*?-->([\s\S]*?)<!--[\s\S]*?CARD_CSS_END[\s\S]*?-->/i);
- return {character,assets,books,html:htmlMatch?.[1]?.trim()||"",css:cssMatch?.[1]?.trim()||"",isHtml:/<([a-z][\s\S]*?)>/i.test(html),parseError};
+ return {character,assets,books,html:htmlMatch?.[1]?.trim()||extractedHtml,css:cssMatch?.[1]?.trim()||extractedCss,isHtml:/<([a-z][\s\S]*?)>/i.test(html),parseError};
 }
 function characterCard(){const c=state.character;return {spec:"chara_card_v2",spec_version:"2.0",data:{name:textValue(c.name),description:textValue(c.description),personality:textValue(c.personality),scenario:textValue(c.scenario),first_mes:textValue(c.first_mes),mes_example:textValue(c.mes_example),creator_notes:textValue(c.creator_notes),system_prompt:textValue(c.system_prompt),post_history_instructions:textValue(c.post_history_instructions),alternate_greetings:Array.isArray(c.alternate_greetings)?c.alternate_greetings:textValue(c.alternate_greetings).split(/\n\s*\n/).filter(Boolean),tags:Array.isArray(c.tags)?c.tags:textValue(c.tags).split(",").map(x=>x.trim()).filter(Boolean),creator:textValue(c.creator),character_version:textValue(c.character_version),extensions:{}}}}
 function setEnabled(ids,on){ids.forEach(id=>{const e=$("#"+id);if(e)e.disabled=!on})}
