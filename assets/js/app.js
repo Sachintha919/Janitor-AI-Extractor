@@ -133,6 +133,64 @@ function parseSource(raw) {
   const cssMatch = raw.match(/<!--[\s\S]*?CARD_CSS_START[\s\S]*?-->([\s\S]*?)<!--[\s\S]*?CARD_CSS_END[\s\S]*?-->/i);
   return {character,assets,books,html:htmlMatch?.[1]?.trim() || html,css:cssMatch?.[1]?.trim() || css};
 }
+async function readPNGCharacterCard(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const signature = [137,80,78,71,13,10,26,10];
+  if (bytes.length < 8 || !signature.every((value,index)=>bytes[index]===value)) return null;
+  const view = new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  const decoder = new TextDecoder();
+  async function inflate(input) {
+    if (typeof DecompressionStream === "undefined") throw new Error("This browser cannot decompress PNG metadata.");
+    const stream = new Blob([input]).stream().pipeThrough(new DecompressionStream("deflate"));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  function splitNull(data,start=0) {
+    let end=start;
+    while(end<data.length && data[end]!==0) end++;
+    return {value:decoder.decode(data.subarray(start,end)),next:end+1};
+  }
+  for(let offset=8;offset+12<=bytes.length;) {
+    const length=view.getUint32(offset);
+    if(length>bytes.length-offset-12) break;
+    const type=decoder.decode(bytes.subarray(offset+4,offset+8));
+    const chunk=bytes.subarray(offset+8,offset+8+length);
+    offset+=length+12;
+    let key="",valueBytes=null;
+    try {
+      if(type==="tEXt") {
+        const part=splitNull(chunk);key=part.value;valueBytes=chunk.subarray(part.next);
+      } else if(type==="zTXt") {
+        const part=splitNull(chunk);key=part.value;
+        if(chunk[part.next]===0)valueBytes=await inflate(chunk.subarray(part.next+1));
+      } else if(type==="iTXt") {
+        const part=splitNull(chunk);key=part.value;
+        let cursor=part.next,compressed=chunk[cursor++]===1;
+        cursor++; // compression method
+        cursor=splitNull(chunk,cursor).next; // language tag
+        cursor=splitNull(chunk,cursor).next; // translated keyword
+        valueBytes=chunk.subarray(cursor);
+        if(compressed)valueBytes=await inflate(valueBytes);
+      }
+      if(!["chara","ccv3","chara_card"].includes(key)||!valueBytes?.length) continue;
+      const text=decoder.decode(valueBytes);
+      try { return JSON.parse(text); } catch {}
+      try {
+        const binary=atob(text.trim());
+        const decoded=new TextDecoder().decode(Uint8Array.from(binary,c=>c.charCodeAt(0)));
+        return JSON.parse(decoded);
+      } catch {}
+    } catch {}
+  }
+  return null;
+}
+function fileAsDataURL(file) {
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(String(reader.result));
+    reader.onerror=()=>reject(reader.error||new Error("Could not read image file."));
+    reader.readAsDataURL(file);
+  });
+}
 function parseLabeledText(raw) {
   const aliases = {
     name:"name",charactername:"name",description:"description",personality:"personality",
@@ -355,8 +413,37 @@ function init() {
     const file=event.target.files?.[0];
     if(!file)return;
     if(file.size>15*1024*1024){toast("Please choose a file smaller than 15 MB.");event.target.value="";return;}
-    $("#source-data").value=await file.text();
-    toast("Loaded "+file.name+". Choose Extract fields to process it.");
+    try {
+      if(file.type.startsWith("image/")) {
+        const dataURL=await fileAsDataURL(file);
+        const imageAsset={url:dataURL,label:file.name,source:"Local image upload"};
+        if(file.type==="image/png") {
+          const cardData=await readPNGCharacterCard(file);
+          if(cardData) {
+            const parsed=parseSource(JSON.stringify(cardData));
+            parsed.assets.unshift(imageAsset);
+            applyParsed(parsed);
+            toast("PNG character card metadata imported.");
+            return;
+          }
+        }
+        state.assets=[imageAsset];
+        renderAssets();
+        toast("Image added to the Assets tab.");
+        return;
+      }
+      const content=await file.text();
+      if(file.name.toLowerCase().endsWith(".css")) {
+        $("#card-css").value=content;
+        updatePreview();
+        toast("CSS loaded into Card Design.");
+        return;
+      }
+      $("#source-data").value=content;
+      toast("Loaded "+file.name+". Choose Extract fields to process it.");
+    } catch(error) {
+      toast("Could not import file: "+error.message);
+    }
   });
   bind("clear-source",()=>{
     $("#source-data").value="";$("#source-file").value="";
