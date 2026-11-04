@@ -60,7 +60,8 @@
 <div class="capture-grid">
 <section class="endpoint-card surface"><div class="section-title compact"><div><h2>Endpoint setup</h2><p>Local receiver connection.</p></div><span class="lock-icon">⌑</span></div>
 <label for="endpoint-url">Receiver base URL</label><input id="endpoint-url" class="text-input" type="url" value="http://127.0.0.1:8787">
-<p class="input-hint">Default local address. If using a secure tunnel, paste its HTTPS URL here and use /v1 as the API base URL in the chat client.</p>
+<label for="receiver-key">Receiver access key <span class="optional-label">(only if configured)</span></label><input id="receiver-key" class="text-input" type="password" placeholder="Same key configured in API_KEY" autocomplete="off">
+<p class="input-hint">For local use, leave the key blank. If you expose the receiver through a secure HTTPS tunnel or hosted service, configure API_KEY on the server and enter the same key here and in Janitor AI.</p>
 <button class="button button-primary full-width" id="connect-endpoint">Check connection <span>→</span></button>
 <div class="security-note"><span>ⓘ</span> The server ignores API keys and does not forward requests to an AI provider. Never expose the receiver publicly without a secure tunnel/access control.</div>
 </section>
