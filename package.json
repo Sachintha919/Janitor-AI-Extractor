@@ -1,11 +1,12 @@
 {
   "name": "janitor-ai-extractor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "Browser workspace and temporary OpenAI-compatible request inspector",
+  "description": "Temporary character-data workspace and OpenAI-compatible prompt request inspector",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "check": "node --check server.js && node --check assets/js/app.js"
   },
   "engines": {
     "node": ">=18"
