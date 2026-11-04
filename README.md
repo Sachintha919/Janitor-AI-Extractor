@@ -23,13 +23,13 @@ A permanent character database is not used. Imported data stays in the active br
 ## 🧩 Features in the current build
 
 ### Definitions
-- Import Character Card JSON (including common V2-style `data` objects), JSON, HTML, text, or local `.json`, `.txt`, `.html`, and `.htm` files.
+- Import Character Card JSON (including common V2-style `data` objects), PNG character-card images with embedded `chara` / `ccv3` metadata, JSON, HTML, text, CSS, or local image files.
 - Detect common fields: name, description, personality, scenario, first message, alternate greetings, example dialogue, creator notes, system prompt, post-history instructions, creator, version and tags.
 - Edit detected fields before exporting.
 - Export as TXT, normalized JSON, or a Character Card V2-shaped JSON file.
 
 ### Assets
-- Find image URLs and embedded base64 image data in imported JSON/HTML.
+- Find image URLs and embedded base64 image data in imported JSON/HTML; import standalone images and extract embedded character-card metadata from supported PNG cards.
 - Preview and download individual images when the browser/image host permits it.
 - Detect lorebook / world-info objects and export them as JSON.
 - Create a ZIP archive containing imported lorebook JSON and image files that permit browser fetching.
@@ -81,6 +81,8 @@ Run the syntax check:
 ```bash
 npm run check
 ```
+
+GitHub Actions also runs JavaScript syntax checks and a local receiver smoke test on pushes and pull requests.
 
 ### Configure Janitor AI
 
@@ -150,7 +152,7 @@ Do not commit real keys to GitHub. Do not paste an API key into screenshots or p
 
 ```text
 Janitor-AI-Extractor/
-├── .github/workflows/pages.yml
+├── .github/workflows/\n│   ├── pages.yml\n│   └── validate.yml
 ├── assets/
 │   ├── css/styles.css
 │   ├── images/banner.svg
