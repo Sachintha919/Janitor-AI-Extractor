@@ -1,0 +1,12 @@
+{
+  "name": "janitor-ai-extractor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static character-data workspace with a future companion-extension bridge.",
+  "scripts": {
+    "check": "node --check assets/js/app.js && node --check assets/js/core/extension-bridge.js && node --check assets/js/importers/character-importer.js && node --check assets/js/utils/download.js",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
