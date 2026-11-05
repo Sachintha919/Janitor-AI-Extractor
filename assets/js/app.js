@@ -105,7 +105,7 @@ function makeCharacterCard() {
   const d=currentDefinitions();
   return {spec:"chara_card_v2",spec_version:"2.0",data:{...d,name:valueText(d.name),description:valueText(d.description),personality:valueText(d.personality),scenario:valueText(d.scenario),first_mes:valueText(d.first_mes),mes_example:valueText(d.mes_example),creator_notes:valueText(d.creator_notes),system_prompt:valueText(d.system_prompt),post_history_instructions:valueText(d.post_history_instructions),alternate_greetings:Array.isArray(d.alternate_greetings)?d.alternate_greetings:(d.alternate_greetings?[valueText(d.alternate_greetings)]:[]),tags:Array.isArray(d.tags)?d.tags:(d.tags?valueText(d.tags).split(",").map(x=>x.trim()).filter(Boolean):[]),extensions:d.extensions&&typeof d.extensions==="object"?d.extensions:{}}};
 }
-function currentDefinitions() {return {...cloneData(state.extraFields),...cloneData(state.character)};}
+
 function exportSession() {
   const data={schema:"janitor-ai-extractor-session",schemaVersion:1,exportedAt:new Date().toISOString(),sourceUrl:state.sourceUrl,importedAt:state.importedAt,definitions:currentDefinitions(),assets:state.assets,lorebooks:state.lorebooks,cardDesign:state.card};
   downloadText(safeFilename(state.character.name||"character")+"-extraction-session.json",JSON.stringify(data,null,2),"application/json;charset=utf-8");
