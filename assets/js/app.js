@@ -66,7 +66,6 @@ function applyImport(result) {
   message("parse-message","Import complete: "+(Object.keys(state.character).length+Object.keys(state.extraFields).length)+" definition field(s), "+state.assets.length+" image(s), "+state.lorebooks.length+" lorebook(s).");
   toast("Imported data is available in this browser session.");
 }
-function snapshot(){state.original={character:cloneData(state.character),extraFields:cloneData(state.extraFields),assets:cloneData(state.assets),lorebooks:cloneData(state.lorebooks),card:cloneData(state.card),sources:cloneData(state.sources),sourceUrl:state.sourceUrl};}
 function validateCharacterUrl(value) {
   const url=new URL(value),host=url.hostname.toLowerCase();
   if(!(host==="janitorai.com"||host==="www.janitorai.com"||host.endsWith(".janitorai.com"))||!/^\/characters?\//i.test(url.pathname))throw new Error("Enter a valid Janitor AI character URL.");
