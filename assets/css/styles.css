@@ -326,8 +326,8 @@ h1 em { font-style: normal; background: linear-gradient(90deg,#b2a5ff 0%,#78dcca
 .raw-request{border-top:1px solid var(--line);padding:9px}.raw-request summary{color:#a99aff;font-size:8px;cursor:pointer}.raw-request pre{margin-top:8px;background:#080e1d;border-radius:8px}
 .request-actions{display:flex;gap:7px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--line)}
 .form-message.is-error{color:#f09aa4}
-@media(max-width:900px){.custom-field-panel{grid-template-columns:1fr}.custom-field-inputs{grid-template-columns:1fr 1fr}.capture-layout{grid-template-columns:1fr}.capture-list{max-height:180px}.design-editors{grid-template-columns:1fr}}
-@media(max-width:650px){.custom-field-inputs{grid-template-columns:1fr}.capture-layout{grid-template-columns:1fr}.capture-grid{grid-template-columns:1fr}.capture-state-line{display:block}.capture-state-line b{display:block;text-align:left;margin-top:4px}.download-row{display:grid}.download-row .button{width:100%}}
+@media(max-width:900px){.capture-layout{grid-template-columns:1fr}.capture-list{max-height:180px}.design-editors{grid-template-columns:1fr}}
+@media(max-width:650px){.capture-layout{grid-template-columns:1fr}.capture-grid{grid-template-columns:1fr}.capture-state-line{display:block}.capture-state-line b{display:block;text-align:left;margin-top:4px}.download-row{display:grid}.download-row .button{width:100%}}
 
 /* Readability pass: bring compact UI labels and helper copy to comfortable sizes. */
 body { font-size: 15px; }
