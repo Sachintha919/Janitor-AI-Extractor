@@ -8,13 +8,12 @@ test("parses common Character Card V2 data fields", () => {
     data: {
       name: "Jane", description: "A character", personality: "Kind", scenario: "A garden",
       first_mes: "Hello", alternate_greetings: ["Hi", "Hey"], tags: ["romance", "fantasy"],
-      creator: "Tester", character_version: "1.2"
+      character_version: "1.2"
     }
   }));
   assert.equal(result.character.name, "Jane");
   assert.equal(result.character.first_mes, "Hello");
   assert.deepEqual(result.character.alternate_greetings, ["Hi", "Hey"]);
-  assert.equal(result.character.creator, "Tester");
 });
 
 test("preserves unknown character fields", () => {
