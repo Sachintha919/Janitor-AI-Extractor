@@ -67,7 +67,7 @@ function collectResources(source) {
     seen.add(value);
     if(Array.isArray(value)) { value.forEach((item,i)=>walk(item,path+"["+i+"]",depth+1)); return; }
     for(const [key,item] of Object.entries(value)) {
-      if(/lore.?book|world.?info|character.?book/i.test(key)&&item&&typeof item==="object") lorebooks.push({name:key,data:cloneData(item),source:path});
+      if(/lore.?book|lore.?bary|world.?info|character.?book/i.test(key)&&item&&typeof item==="object") lorebooks.push({name:key,data:cloneData(item),source:path});
       if(typeof item==="string") {
         const isImage=imageData.test(item)||(/^https?:\/\//i.test(item)&&(/image|avatar|thumbnail|background|cover|icon|photo|banner|^url$/i.test(key)||imageExt.test(item)));
         if(isImage&&!assets.has(item)) assets.set(item,{id:"asset-"+(assets.size+1),url:item,label:key||"Image",source:path,type:"image"});
@@ -153,10 +153,10 @@ function parseHtml(raw,sourceUrl="") {
     const key=name.toLowerCase();
     if(seenBooks.has(key)) continue;
     seenBooks.add(key);
-    result.lorebooks.push({name,data:{kind:"visible-lorebook-reference",title:name,description,metadata,sourcePage:baseUrl||doc.baseURI,entriesIncluded:false,note:"The character page shows this Lorebook reference card, but not its actual entry list. Open the Lorebook page to import entries that are visible there."},source:"Visible Janitor AI Lorebook card"});
+    result.lorebooks.push({name,data:{kind:"visible-lorebook-reference",title:name,description,metadata,sourcePage:sourceUrl||doc.baseURI,entriesIncluded:false,note:"The character page shows this Lorebook reference card, but not its actual entry list. Open the Lorebook page to import entries that are visible there."},source:"Visible Janitor AI Lorebook card"});
   }
   for(const anchor of doc.querySelectorAll("a[href]")) {
-    if(!/lore.?book|world.?info/i.test((anchor.textContent||"")+" "+anchor.href)) continue;
+    if(!/lore.?book|lore.?bary|world.?info/i.test((anchor.textContent||"")+" "+anchor.href)) continue;
     const name=(anchor.textContent||"Lorebook link").trim()||"Lorebook link";
     const key=anchor.href.toLowerCase();
     if(seenBooks.has(key)) continue;
@@ -205,7 +205,13 @@ export function parseSource(raw,options={}) {
   if(!extracted.character.description&&html.meta.description) extracted.character.description=html.meta.description;
   const resources=sourceObject?collectResources(sourceObject):{assets:[],lorebooks:[]};
   const assets=[...new Map([...resources.assets,...html.assets].map(item=>[item.url,item])).values()];
-  const lorebooks=[...new Map([...(resources.lorebooks||[]),...(html.lorebooks||[])].map(book=>[(book.name||"book")+JSON.stringify(book.data),book])).values()];
+  const lorebookItems=[...(resources.lorebooks||[]),...(html.lorebooks||[])];
+  const characterBook=extracted.character?.character_book;
+  if(characterBook!==undefined&&characterBook!==null&&characterBook!=="") {
+    const isAlreadyPresent=lorebookItems.some(book=>JSON.stringify(book.data)===JSON.stringify(characterBook));
+    if(!isAlreadyPresent) lorebookItems.push({name:"Character Book",data:cloneData(characterBook),source:"Character definition"});
+  }
+  const lorebooks=[...new Map(lorebookItems.map(book=>[(book.name||"book")+JSON.stringify(book.data),book])).values()];
   return {
     ...extracted,assets,lorebooks,html:html.html,css:html.css,
     rawData:cloneData(sourceObject),rawText:text,rawType:validJson?"json":"text",
