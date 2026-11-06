@@ -144,8 +144,24 @@ function extensionMessage(event) {
   const p=event.payload||{};
   if(event.type==="CAPTURED_REQUEST") {try{addCapture(p);toast("Janitor AI request captured.");}catch(error){toast(error.message);}}
   if(event.type==="CHARACTER_DATA") {
-    const parsed=parseSource(p.character||p.definitions||p.data||{},{fileName:"Brave extension capture",sourceUrl:p.sourceUrl||""});
-    parsed.assets.push(...(p.assets||[]));parsed.lorebooks.push(...(p.lorebooks||[]));parsed.html=p.cardDesign?.html||parsed.html;parsed.css=p.cardDesign?.css||parsed.css;applyImport(parsed);toast("Character data received from extension.");
+    const rawPage=p.html||p.pageHtml||p.pageSource||p.character||p.definitions||p.data||{};
+    const parsed=parseSource(rawPage,{fileName:"Brave extension capture",sourceUrl:p.sourceUrl||""});
+    const structured=p.character&&typeof p.character==="object"
+      ?parseSource(p.character,{fileName:"Extension structured fields",sourceUrl:p.sourceUrl||""})
+      :null;
+    if(structured) {
+      for(const [key,value] of Object.entries(structured.character||{}))
+        if(parsed.character[key]===undefined||parsed.character[key]==="") parsed.character[key]=value;
+      Object.assign(parsed.extraFields,structured.extraFields||{});
+      parsed.lorebooks.push(...(structured.lorebooks||[]));
+      parsed.assets.push(...(structured.assets||[]));
+    }
+    parsed.assets.push(...(p.assets||[]));
+    parsed.lorebooks.push(...(p.lorebooks||[]));
+    parsed.html=p.cardDesign?.html||parsed.html;
+    parsed.css=p.cardDesign?.css||parsed.css;
+    applyImport(parsed);
+    toast("Character data received from extension.");
   }
   if(event.type==="CAPTURE_STATE"){captureEnabled=Boolean(p.enabled);badge($("#capture-status"),captureEnabled?"Listening for requests":"Capture stopped",captureEnabled?"success":"muted");updateCaptureControls();}
   if(event.type==="EXTENSION_ERROR")toast("Extension: "+String(p.message||"Unknown error"));
