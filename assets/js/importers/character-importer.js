@@ -86,8 +86,42 @@ function collectResources(source) {
   walk(source);
   return {assets:[...assets.values()],lorebooks};
 }
-function parseHtml(raw) {
-  const result={object:null,html:"",css:"",assets:[],meta:{}};
+function extractJanitorSections(doc) {
+  const character={},extraFields={};
+  const normalise=value=>String(value||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  const map=new Map([
+    ["personality","personality"],["scenario","scenario"],["initial messages","first_mes"],
+    ["initial message","first_mes"],["first message","first_mes"],["example dialogs","mes_example"],
+    ["example dialogue","mes_example"],["example dialogues","mes_example"],["description","description"],
+    ["creator notes","creator_notes"],["alternate greetings","alternate_greetings"],
+    ["system prompt","system_prompt"],["post history instructions","post_history_instructions"],
+    ["character book","character_book"],["lorebook","character_book"]
+  ]);
+  const sections=doc.querySelectorAll('[id^="info-"], [class*="characterInfoAccordionItem"]');
+  for(const section of sections) {
+    const titleNode=section.querySelector(".characterInfoAccordionTitleText, [class*='AccordionTitleText'], button");
+    const panel=section.querySelector('[role="region"], [id^="panel-info-"], [class*="AccordionPanel"]');
+    if(!titleNode||!panel) continue;
+    const title=normalise(titleNode.textContent).replace(/\s+\(\d+\s+tokens?\)\s*$/,"");
+    const key=map.get(title);
+    const content=panel.querySelector(".characterInfoMarkdownContainer, [class*='MarkdownContainer']")||panel;
+    const value=(content.innerText||content.textContent||"").replace(/\r/g,"").trim();
+    if(!value) continue;
+    if(key) {
+      if(character[key]) character[key]+="\n\n"+value; else character[key]=value;
+    } else {
+      const label=title.replace(/\b\w/g,c=>c.toUpperCase());
+      extraFields[label||"Additional section "+(Object.keys(extraFields).length+1)]=value;
+    }
+  }
+  if(!character.name) {
+    const heading=doc.querySelector(".characterInfoMarkdownContainer h1, [class*='characterInfoMarkdownContainer'] h1");
+    if(heading) character.name=heading.textContent.trim();
+  }
+  return {character,extraFields};
+}
+function parseHtml(raw,sourceUrl="") {
+  const result={object:null,html:"",css:"",assets:[],meta:{},sections:{character:{},extraFields:{}}};
   if(typeof DOMParser==="undefined"||!/<(?:html|body|div|section|article|main)\b/i.test(raw)) return result;
   const doc=new DOMParser().parseFromString(raw,"text/html");
   for(const script of doc.querySelectorAll('script[type="application/json"],script#__NEXT_DATA__,script#__NUXT_DATA__')) {
@@ -97,11 +131,15 @@ function parseHtml(raw) {
   const description=doc.querySelector('meta[name="description"]')?.content||doc.querySelector('meta[property="og:description"]')?.content;
   if(title) result.meta.name=title;
   if(description) result.meta.description=description;
+  result.sections=extractJanitorSections(doc);
   result.html=doc.body?.innerHTML||"";
   result.css=[...doc.querySelectorAll("style")].map(node=>node.textContent||"").filter(Boolean).join("\n\n");
-  for(const image of doc.querySelectorAll("img[src]")) {
-    const url=image.getAttribute("src");
-    if(/^(https?:\/\/|data:image\/)/i.test(url||"")) result.assets.push({id:"html-image-"+result.assets.length,url,label:image.alt||"Image",source:"Imported HTML",type:"image"});
+  for(const image of doc.querySelectorAll("img[src],source[srcset]")) {
+    const rawUrl=image.getAttribute("src")||image.getAttribute("srcset")?.split(",")[0]?.trim().split(" ")[0];
+    if(!rawUrl) continue;
+    let url=rawUrl;
+    try { url=new URL(rawUrl,sourceUrl||doc.baseURI).href; } catch {}
+    if(/^(https?:\/\/|data:image\/)/i.test(url)) result.assets.push({id:"html-image-"+result.assets.length,url,label:image.alt||"Image",source:"Imported HTML",type:"image"});
   }
   return result;
 }
@@ -109,9 +147,11 @@ export function parseSource(raw,options={}) {
   const text=typeof raw==="string"?raw:JSON.stringify(raw??{});
   let sourceObject=null,validJson=false;
   try { sourceObject=typeof raw==="string"?JSON.parse(text):cloneData(raw); validJson=Boolean(sourceObject&&typeof sourceObject==="object"); } catch {}
-  const html=sourceObject?{object:null,html:"",css:"",assets:[],meta:{}}:parseHtml(text);
+  const html=sourceObject?{object:null,html:"",css:"",assets:[],meta:{},sections:{character:{},extraFields:{}}}:parseHtml(text,options.sourceUrl||"");
   if(!sourceObject&&html.object) sourceObject=html.object;
   const extracted=sourceObject&&typeof sourceObject==="object"?extractFields(sourceObject):{character:parseText(text),extraFields:{}};
+  Object.assign(extracted.character,html.sections?.character||{});
+  Object.assign(extracted.extraFields,html.sections?.extraFields||{});
   if(!extracted.character.name&&html.meta.name) extracted.character.name=html.meta.name;
   if(!extracted.character.description&&html.meta.description) extracted.character.description=html.meta.description;
   const resources=sourceObject?collectResources(sourceObject):{assets:[],lorebooks:[]};
