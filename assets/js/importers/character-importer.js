@@ -92,11 +92,9 @@ export function extractJanitorSections(doc) {
     ["first messages","first_mes"],["example dialogs","mes_example"],
     ["example dialog","mes_example"],["example dialogue","mes_example"],
     ["example dialogues","mes_example"],["description","description"],
-    ["creator notes","creator_notes"],["alternate greetings","alternate_greetings"],
-    ["system prompt","system_prompt"],["post history instructions","post_history_instructions"],
+    ["alternate greetings","alternate_greetings"],
     ["character book","character_book"],["character lorebook","character_book"],
-    ["lorebook","character_book"],["world info","character_book"],
-    ["creator","creator"],["tags","tags"]
+    ["lorebook","character_book"],["world info","character_book"]
   ]);
   const sections=[...new Set(doc.querySelectorAll('[id^="info-"], [class*="characterInfoAccordionItem"]'))];
   for(const section of sections) {
@@ -116,6 +114,8 @@ export function extractJanitorSections(doc) {
       .replace(/\n{3,}/g,"\n\n")
       .trim();
     if(!value) continue;
+    const ignored=new Set(["creator notes","system prompt","post history instructions","creator","group only greetings","tags","extensions"]);
+    if(ignored.has(heading)) continue;
     const key=map.get(heading);
     if(key) {
       character[key]=character[key] ? character[key]+"\n\n"+value : value;
@@ -145,7 +145,7 @@ function parseHtml(raw,sourceUrl="") {
   const seenBooks=new Set();
   for(const badge of doc.querySelectorAll('[class*="typeBadge"], [class*="TypeBadge"]')) {
     if(String(badge.textContent||"").trim().toLowerCase()!=="lorebook") continue;
-    const card=badge.closest('[role="button"], [class*="_card_"], [class*="card"]')||badge.parentElement?.parentElement;
+    const card=badge.closest('[role="button"], [class*="_card_"]')||badge.parentElement?.parentElement;
     if(!card) continue;
     const name=(card.querySelector('[class*="cardTitle"], h3, h4')?.textContent||"Lorebook reference").trim();
     const description=(card.querySelector('[class*="cardDescription"], p')?.textContent||"").trim();
