@@ -33,8 +33,8 @@ To preview the static site locally, serve the repository root with any static HT
 2. Paste a Janitor AI character profile URL into **Character page & source import**, then choose **Open character**.
 3. The extension imports the accessible page after it renders. You can also use the extension popup's **Import visible character page** button on a character or chat tab.
 4. Review Definitions, Assets and Card Design. Manual JSON, HTML, text, PNG character cards and local images can still be imported through the source box.
-4. Edit fields as needed. Arrays and objects should be kept as valid JSON in their editors.
-5. Export the edited definitions, Character Card JSON, original source or complete extraction session.
+5. Edit fields as needed. Arrays and objects should be kept as valid JSON in their editors.
+6. Export the edited definitions, Character Card JSON, original source or complete extraction session.
 
 Supported imports include ordinary JSON, common Character Card V2-style spec/data objects, PNG chara/ccv3 metadata where supported by the browser, HTML, text, CSS and local image files. Parsing is best-effort: unknown fields are retained as additional fields when present in the character data object.
 
@@ -43,13 +43,13 @@ Some remote image hosts block cross-origin downloads. In that case, open the ori
 ## Prompt Capture workflow
 
 1. Open **Prompt Capture** in the workspace.
-2. Install and connect the separate Brave extension when it is delivered.
+2. Install and connect the separate Brave companion extension ZIP in Brave.
 3. Configure Janitor AI's custom proxy settings as usual.
 4. Start capture from the workspace.
 5. Send a chat message in Janitor AI. The extension will capture the request and send the mock response back to Janitor AI.
 6. Inspect and export the captured request here.
 
-The extension bridge protocol is documented in docs/EXTENSION_BRIDGE.md. The exact Janitor AI request mechanism and browser permissions must be verified in the target Brave version during extension development. A website cannot reliably inspect another site's authenticated page by itself; that is why the companion extension is a separate component.
+The extension bridge protocol is documented in docs/EXTENSION_BRIDGE.md. The custom-proxy interception is preserved from the version the user confirmed working; any future Janitor AI frontend or Brave changes should be tested again before changing that logic. A website cannot reliably inspect another site's authenticated page by itself; that is why the companion extension is a separate component.
 
 ## Privacy and responsible use
 
@@ -84,7 +84,11 @@ The extension bridge protocol is documented in docs/EXTENSION_BRIDGE.md. The exa
         ├── validate.yml
         └── pages.yml
 
-## Companion extension\n\nThe separate Brave extension ZIP includes a Manifest V3 service worker, Janitor AI page content script, Extractor app bridge, branded PNG icons and a redesigned popup. Its current package is version 1.0.3. The extension package is maintained separately from the static web application repository.\n\n## Development checks
+## Companion extension
+
+The separate Brave extension ZIP includes a Manifest V3 service worker, Janitor AI page content script, Extractor app bridge, branded PNG icons and a redesigned popup. Its current package is version 1.0.3. The extension package is maintained separately from the static web application repository.
+
+## Development checks
 
 Node.js is used only by the optional automated test suite. The deployed web app itself is static and requires no Node runtime.
 
