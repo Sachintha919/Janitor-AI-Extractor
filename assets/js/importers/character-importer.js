@@ -102,7 +102,7 @@ function extractJanitorSections(doc) {
     const titleNode=section.querySelector(".characterInfoAccordionTitleText, [class*='AccordionTitleText'], button");
     const panel=section.querySelector('[role="region"], [id^="panel-info-"], [class*="AccordionPanel"]');
     if(!titleNode||!panel) continue;
-    const title=normalise(titleNode.textContent).replace(/\s+\(\d+\s+tokens?\)\s*$/,"");
+    const title=normalise(String(titleNode.textContent||"").replace(/\(\s*\d+\s+tokens?\s*\)/i,""));
     const key=map.get(title);
     const content=panel.querySelector(".characterInfoMarkdownContainer, [class*='MarkdownContainer']")||panel;
     const value=(content.innerText||content.textContent||"").replace(/\r/g,"").trim();
