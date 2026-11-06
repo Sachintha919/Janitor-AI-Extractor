@@ -50,3 +50,36 @@ test("retains structured arrays", () => {
   assert.deepEqual(result.character.alternate_greetings, ["One", "Two"]);
   assert.deepEqual(result.character.tags, ["a", "b"]);
 });
+
+
+test("extracts every Janitor AI accordion section and ignores token counters", async () => {
+  const { extractJanitorSections } = await import("../assets/js/importers/character-importer.js");
+  const fixtures = [
+    ["Scenario (202 tokens)", "Jane owns a flower shop.\n{{user}} is her new assistant."],
+    ["Personality (1384 tokens)", "Warm, cheerful and nurturing.\nPrivately struggles with loneliness."],
+    ["Initial Messages (399 tokens)", "The bell above the door jingles.\n\n\"Welcome to my shop!\""],
+    ["Example Dialogs (890 tokens)", "{{user}}: Hello.\n{{char}}: Jane smiles."]
+  ];
+  const sections = fixtures.map(([heading, body], index) => {
+    const button = {
+      querySelector: () => ({ textContent: heading }),
+      getAttribute: () => "panel-info-" + index
+    };
+    return { querySelector: selector => selector.includes("button") ? button : null };
+  });
+  const panels = new Map(fixtures.map(([heading, body], index) => [
+    "panel-info-" + index,
+    { querySelector: () => ({ innerText: body, textContent: body }) }
+  ]));
+  const doc = {
+    querySelectorAll: () => sections,
+    getElementById: id => panels.get(id) || null,
+    querySelector: () => null
+  };
+  const result = extractJanitorSections(doc);
+  assert.equal(result.character.scenario, fixtures[0][1]);
+  assert.equal(result.character.personality, fixtures[1][1]);
+  assert.equal(result.character.first_mes, fixtures[2][1]);
+  assert.equal(result.character.mes_example, fixtures[3][1]);
+  assert.deepEqual(result.extraFields, {});
+});
