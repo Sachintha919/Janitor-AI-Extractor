@@ -20,6 +20,7 @@ function updateField(input,key,isExtra=false) {
   if(raw==="" ){target[key]="";return;}
   if(old&&typeof old==="object") {try{target[key]=JSON.parse(raw);}catch{target[key]=raw;}}
   else target[key]=raw;
+  if(!isExtra) updateCard();
 }
 function renderDefinitions() {
   const html=FIELD_SCHEMA.map(field=>{
@@ -88,9 +89,15 @@ body{margin:0;padding:22px;background:radial-gradient(circle at 15% 0%,#342454,#
 .bot-card-footer span{color:#f3a8da}
 @media(max-width:520px){body{padding:10px}.bot-card-main{padding:0 15px 18px}.bot-card-heading h1{font-size:25px}.bot-card-avatar,.bot-card-placeholder{width:120px;height:120px}}
 `;
+function isUsableCardMarkup(markup) {
+  const value=String(markup||"").trim();
+  if(!value) return false;
+  return /<\\s*(?:html|body)\\b/i.test(value)
+    ||/class\\s*=\\s*["'][^"']*(?:bot-card|character-card|chara-card|card-preview)/i.test(value);
+}
 function getPreviewDocument() {
   const markup=state.card.html.trim()||generatedBotCardMarkup();
-  const css=PREVIEW_CSS+"\\n"+state.card.css;
+  const css=PREVIEW_CSS+"\n"+state.card.css;
   return '<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src https: data:; style-src \'unsafe-inline\' https:; font-src https: data:;"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body>'+markup+'</body></html>';
 }
 function updateCard() {
@@ -115,7 +122,7 @@ function applyImport(result) {
   state.assets.push(...(result.assets||[]));state.lorebooks.push(...(result.lorebooks||[]));
   state.assets=[...new Map(state.assets.map(item=>[item.url,item])).values()];
   state.lorebooks=[...new Map(state.lorebooks.map(item=>[(item.name||"book")+JSON.stringify(item.data),item])).values()];
-  if(result.html)state.card.html=result.html;if(result.css)state.card.css=result.css;if(result.sourceUrl)state.sourceUrl=result.sourceUrl;
+  if(result.html&&isUsableCardMarkup(result.html)){state.card.html=result.html;if(result.css)state.card.css=result.css;}if(result.sourceUrl)state.sourceUrl=result.sourceUrl;
   if(result.rawText!==undefined)state.sources.push({name:result.sourceName||"Imported source",content:result.rawText,type:result.rawType||"text"});
   state.importedAt=new Date().toISOString();snapshot();refresh();
   message("parse-message","Import complete: "+(Object.keys(state.character).length+Object.keys(state.extraFields).length)+" definition field(s), "+state.assets.length+" image(s), "+state.lorebooks.length+" lorebook(s).");
@@ -145,12 +152,6 @@ function restoreOriginal() {
   if(!state.original){toast("There is no imported version to restore.");return;}
   state.character=cloneData(state.original.character)||{};state.extraFields=cloneData(state.original.extraFields)||{};
   state.assets=cloneData(state.original.assets)||[];state.lorebooks=cloneData(state.original.lorebooks)||[];state.card=cloneData(state.original.card)||{html:"",css:""};refresh();toast("Restored the original imported data.");
-}
-function addExtra() {
-  const key=$("#custom-field-name").value.trim();if(!key){toast("Enter a field name.");return;}
-  if(Object.hasOwn(state.character,key)||Object.hasOwn(state.extraFields,key)){toast("That field already exists.");return;}
-  let value=$("#custom-field-value").value;try{value=JSON.parse(value);}catch{}
-  state.extraFields[key]=value;$("#custom-field-name").value="";$("#custom-field-value").value="";renderDefinitions();
 }
 function reset() {
   state.character={};state.extraFields={};state.original=null;state.assets=[];state.lorebooks=[];state.sources=[];state.card={html:"",css:""};state.sourceUrl="";state.importedAt=null;
