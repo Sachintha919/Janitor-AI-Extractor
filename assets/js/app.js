@@ -191,6 +191,7 @@ function updateCaptureControls() {
 }
 function extensionStatus(info) {
   badge($("#extension-status"),info.connected?"Extension connected · v"+info.extensionVersion:"Extension disconnected",info.connected?"success":"muted");
+  $(".connection-state").classList.toggle("is-connected",Boolean(info.connected));
   $("#extension-status-detail").textContent=info.connected?"The companion extension is responding.":"Install and open the separate companion extension to enable live extraction and prompt capture.";
   if(!info.connected){captureEnabled=false;badge($("#capture-status"),"Extension disconnected","muted");}
   updateCaptureControls();
