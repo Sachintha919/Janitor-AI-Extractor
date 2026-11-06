@@ -45,7 +45,7 @@ All app-to-extension envelopes use source janitor-extractor-app.
 | PONG | optional sentAt | Heartbeat response |
 | CAPTURE_STATE | { enabled: boolean } | Capture on/off state |
 | CAPTURED_REQUEST | { id, capturedAt, url, method, request, responseMode } | Captured OpenAI-compatible request body |
-| CHARACTER_DATA | { sourceUrl, character, assets, lorebooks, cardDesign } | User-authorized page data |
+| CHARACTER_DATA | { sourceUrl, html? / pageHtml?, character?, assets?, lorebooks?, cardDesign? } | User-authorized page data |
 | EXTENSION_ERROR | { message } | Safe, user-readable error |
 
 ## Captured request shape
@@ -70,7 +70,7 @@ Only the request body is required. The extension may include safe endpoint/metho
 
 ## Character data shape
 
-character may be a Character Card V2 data object or a normalized definitions object. assets is an array of { id?, url, label, source?, type? }; lorebooks is an array of { name, data }; cardDesign may contain { html, css }.
+character may be a Character Card V2 data object or normalized definitions object. Prefer sending the complete page HTML as html (or pageHtml) so the web app can parse all Janitor accordion panels independently, including Scenario, Personality, Initial Messages, Example Dialogs and additional sections. If structured character fields are also supplied, the web app merges them without overwriting non-empty page-extracted fields. assets is an array of { id?, url, label, source?, type? }; lorebooks is an array of { name, data }; cardDesign may contain { html, css }.
 
 ## Important implementation notes
 
