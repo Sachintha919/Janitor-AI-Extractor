@@ -86,7 +86,7 @@ function collectResources(source) {
   walk(source);
   return {assets:[...assets.values()],lorebooks};
 }
-function extractJanitorSections(doc) {
+export function extractJanitorSections(doc) {
   const character={},extraFields={};
   const normalise=value=>String(value||"")
     .replace(/\(\s*\d+\s*tokens?\s*\)/ig,"")
