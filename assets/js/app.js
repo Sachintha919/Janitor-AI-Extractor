@@ -56,6 +56,12 @@ function refresh() {
   setEnabled(["download-original"],state.sources.length>0);
 }
 function applyImport(result) {
+  const incomingUrl=result.sourceUrl||"";
+  const previousUrl=state.original?.sourceUrl||"";
+  const hasPriorCharacter=Object.keys(state.character).length||Object.keys(state.extraFields).length||state.assets.length||state.lorebooks.length;
+  if(incomingUrl&&hasPriorCharacter&&previousUrl&&incomingUrl!==previousUrl) {
+    state.character={};state.extraFields={};state.assets=[];state.lorebooks=[];state.sources=[];state.card={html:"",css:""};
+  }
   Object.assign(state.character,result.character||{});Object.assign(state.extraFields,result.extraFields||{});
   state.assets.push(...(result.assets||[]));state.lorebooks.push(...(result.lorebooks||[]));
   state.assets=[...new Map(state.assets.map(item=>[item.url,item])).values()];
