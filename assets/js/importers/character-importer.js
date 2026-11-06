@@ -147,7 +147,7 @@ export function parseSource(raw,options={}) {
   const text=typeof raw==="string"?raw:JSON.stringify(raw??{});
   let sourceObject=null,validJson=false;
   try { sourceObject=typeof raw==="string"?JSON.parse(text):cloneData(raw); validJson=Boolean(sourceObject&&typeof sourceObject==="object"); } catch {}
-  const html=sourceObject?{object:null,html:"",css:"",assets:[],meta:{},sections:{character:{},extraFields:{}}}:parseHtml(text,options.sourceUrl||"");
+  const html=parseHtml(text,options.sourceUrl||"");
   if(!sourceObject&&html.object) sourceObject=html.object;
   const extracted=sourceObject&&typeof sourceObject==="object"?extractFields(sourceObject):{character:parseText(text),extraFields:{}};
   Object.assign(extracted.character,html.sections?.character||{});
