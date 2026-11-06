@@ -2,7 +2,7 @@
 
 **Protocol:** JANITOR_EXTRACTOR_BRIDGE  
 **Version:** 1  
-**Status:** Web-app receiver implemented; companion extension will be delivered separately.
+**Status:** Web-app receiver implemented; companion extension is delivered separately (v1.0.3).
 
 The web app and the extension content script injected into the Extractor web-app origin communicate with window.postMessage. Messages must use the exact page origin as targetOrigin.
 
@@ -79,4 +79,4 @@ character may be a Character Card V2 data object or normalized definitions objec
 - For streaming mode, the adapter must return a valid text/event-stream response with OpenAI-compatible chunks and a [DONE] terminator. It must not break Janitor AI's stream parser.
 - The extension must send CAPTURE_STATE after applying a setting and after any relevant failure.
 - Do not attempt to access hidden server-side definitions, private APIs, cookies or information the signed-in page does not expose.
-- This protocol is a contract for the upcoming extension, not proof that the current Janitor AI front end has already been tested.
+- The extension's page import and bridge are implemented, but platform DOM changes or pages that omit creator definitions can still limit which fields are available.
