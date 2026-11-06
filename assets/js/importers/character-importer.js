@@ -88,29 +88,48 @@ function collectResources(source) {
 }
 function extractJanitorSections(doc) {
   const character={},extraFields={};
-  const normalise=value=>String(value||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  const normalise=value=>String(value||"")
+    .replace(/\(\s*\d+\s*tokens?\s*\)/ig,"")
+    .replace(/\s+/g," ")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g," ")
+    .trim();
   const map=new Map([
-    ["personality","personality"],["scenario","scenario"],["initial messages","first_mes"],
-    ["initial message","first_mes"],["first message","first_mes"],["example dialogs","mes_example"],
-    ["example dialogue","mes_example"],["example dialogues","mes_example"],["description","description"],
+    ["personality","personality"],["persona","personality"],
+    ["scenario","scenario"],["initial messages","first_mes"],
+    ["initial message","first_mes"],["first message","first_mes"],
+    ["first messages","first_mes"],["example dialogs","mes_example"],
+    ["example dialog","mes_example"],["example dialogue","mes_example"],
+    ["example dialogues","mes_example"],["description","description"],
     ["creator notes","creator_notes"],["alternate greetings","alternate_greetings"],
     ["system prompt","system_prompt"],["post history instructions","post_history_instructions"],
-    ["character book","character_book"],["lorebook","character_book"]
+    ["character book","character_book"],["character lorebook","character_book"],
+    ["lorebook","character_book"],["world info","character_book"],
+    ["creator","creator"],["tags","tags"]
   ]);
-  const sections=doc.querySelectorAll('[id^="info-"], [class*="characterInfoAccordionItem"]');
+  const sections=[...new Set(doc.querySelectorAll('[id^="info-"], [class*="characterInfoAccordionItem"]'))];
   for(const section of sections) {
-    const titleNode=section.querySelector(".characterInfoAccordionTitleText, [class*='AccordionTitleText'], button");
-    const panel=section.querySelector('[role="region"], [id^="panel-info-"], [class*="AccordionPanel"]');
-    if(!titleNode||!panel) continue;
-    const title=normalise(String(titleNode.textContent||"").replace(/\(\s*\d+\s+tokens?\s*\)/i,""));
-    const key=map.get(title);
+    const button=section.querySelector("button[aria-controls]")||section.querySelector("button");
+    const titleNode=button?.querySelector(".characterInfoAccordionTitleText, [class*='AccordionTitleText']")||button;
+    const heading=normalise(titleNode?.textContent||"");
+    if(!heading) continue;
+    const panelId=button?.getAttribute("aria-controls");
+    const panel=(panelId&&doc.getElementById(panelId))
+      ||section.querySelector('[role="region"], [id^="panel-info-"], [class*="AccordionPanel"]');
+    if(!panel) continue;
     const content=panel.querySelector(".characterInfoMarkdownContainer, [class*='MarkdownContainer']")||panel;
-    const value=(content.innerText||content.textContent||"").replace(/\r/g,"").trim();
+    const value=String(content.innerText||content.textContent||"")
+      .replace(/\r/g,"")
+      .replace(/\u00a0/g," ")
+      .replace(/[ \t]+\n/g,"\n")
+      .replace(/\n{3,}/g,"\n\n")
+      .trim();
     if(!value) continue;
+    const key=map.get(heading);
     if(key) {
-      if(character[key]) character[key]+="\n\n"+value; else character[key]=value;
+      character[key]=character[key] ? character[key]+"\n\n"+value : value;
     } else {
-      const label=title.replace(/\b\w/g,c=>c.toUpperCase());
+      const label=heading.replace(/\b\w/g,c=>c.toUpperCase());
       extraFields[label||"Additional section "+(Object.keys(extraFields).length+1)]=value;
     }
   }
@@ -132,14 +151,32 @@ function parseHtml(raw,sourceUrl="") {
   if(title) result.meta.name=title;
   if(description) result.meta.description=description;
   result.sections=extractJanitorSections(doc);
-  result.html=doc.body?.innerHTML||"";
+  result.html=doc.querySelector('[class*="characterInfoAccordionWrapper"]')?.innerHTML
+    ||doc.querySelector("main")?.innerHTML||doc.body?.innerHTML||"";
   result.css=[...doc.querySelectorAll("style")].map(node=>node.textContent||"").filter(Boolean).join("\n\n");
-  for(const image of doc.querySelectorAll("img[src],source[srcset]")) {
-    const rawUrl=image.getAttribute("src")||image.getAttribute("srcset")?.split(",")[0]?.trim().split(" ")[0];
-    if(!rawUrl) continue;
-    let url=rawUrl;
-    try { url=new URL(rawUrl,sourceUrl||doc.baseURI).href; } catch {}
-    if(/^(https?:\/\/|data:image\/)/i.test(url)) result.assets.push({id:"html-image-"+result.assets.length,url,label:image.alt||"Image",source:"Imported HTML",type:"image"});
+
+  const seen=new Set();
+  const addAsset=(rawUrl,label,source)=>{
+    if(!rawUrl) return;
+    const candidate=String(rawUrl).trim().split(/\s+/)[0];
+    let url=candidate;
+    try { url=new URL(candidate,sourceUrl||doc.baseURI).href; } catch {}
+    if(!/^(https?:\/\/|data:image\/)/i.test(url)||seen.has(url)) return;
+    seen.add(url);
+    result.assets.push({id:"html-image-"+result.assets.length,url,label:label||"Image",source,type:"image"});
+  };
+  for(const image of doc.querySelectorAll("img,source")) {
+    const label=image.getAttribute("alt")||image.getAttribute("title")||"Image";
+    addAsset(image.getAttribute("src"),label,"Janitor AI page image");
+    addAsset(image.getAttribute("data-src"),label,"Janitor AI lazy-loaded image");
+    addAsset(image.getAttribute("data-original"),label,"Janitor AI original image");
+    addAsset(image.getAttribute("data-lazy-src"),label,"Janitor AI lazy image");
+    const srcset=image.getAttribute("srcset")||"";
+    for(const entry of srcset.split(",")) addAsset(entry.trim().split(/\s+/)[0],label,"Janitor AI responsive image");
+  }
+  for(const node of doc.querySelectorAll('[style*="background-image"]')) {
+    const match=(node.getAttribute("style")||"").match(/url\(["']?([^"')]+)["']?\)/i);
+    if(match) addAsset(match[1],"Background image","Janitor AI card background");
   }
   return result;
 }
