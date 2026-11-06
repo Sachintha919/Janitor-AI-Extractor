@@ -103,3 +103,39 @@ test("omits non-essential metadata from normal definitions and extra fields", ()
   }
   assert.equal(result.character.personality, "Warm");
 });
+
+
+test("omits creator-only metadata from normal definition extraction", () => {
+  const result = parseSource(JSON.stringify({
+    data: {
+      name: "Core fields",
+      personality: "Warm",
+      scenario: "At the flower shop",
+      creator_notes: "Do not show",
+      system_prompt: "Do not show",
+      post_history_instructions: "Do not show",
+      creator: "Do not show",
+      group_only_greetings: ["Do not show"],
+      tags: ["Do not show"],
+      extensions: { hidden: true }
+    }
+  }));
+  assert.equal(result.character.name, "Core fields");
+  assert.equal(result.character.personality, "Warm");
+  for (const key of ["creator_notes", "system_prompt", "post_history_instructions", "creator", "group_only_greetings", "tags", "extensions"]) {
+    assert.equal(Object.hasOwn(result.character, key), false);
+    assert.equal(Object.hasOwn(result.extraFields, key), false);
+  }
+});
+
+test("stores visible Character Book text in Lorebooks as well as Definitions", () => {
+  const result = parseSource(JSON.stringify({
+    name: "Lore test",
+    personality: "A test character",
+    character_book: "Village history\\nThe old garden has a hidden gate."
+  }));
+  assert.equal(result.character.character_book, "Village history\\nThe old garden has a hidden gate.");
+  assert.equal(result.lorebooks.length, 1);
+  assert.equal(result.lorebooks[0].name, "Character Book");
+  assert.match(result.lorebooks[0].data, /hidden gate/);
+});
