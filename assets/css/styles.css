@@ -355,3 +355,123 @@ body { font-size: 15px; }
   .hero-copy { font-size: 12px; }
   .url-panel p, .section-title p, .endpoint-card .section-title p, .request-card .section-title p { font-size: 10px; }
 }
+
+
+/* v1.1 visual/readability refinement */
+:root {
+  --accent-pink: #f3a3d4;
+  --accent-lilac: #c6adff;
+}
+body {
+  font-size: 15px;
+  letter-spacing: .005em;
+}
+.app-shell { isolation: isolate; }
+.surface {
+  border-color: rgba(190,169,255,.15);
+  box-shadow: 0 12px 38px rgba(2,4,15,.18);
+}
+.brand-mark {
+  box-shadow: 0 0 24px rgba(190,110,255,.22);
+}
+.brand-name span { color: var(--accent-pink); }
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -6% -52% 22%;
+  height: 190px;
+  pointer-events: none;
+  background: radial-gradient(ellipse,rgba(220,124,214,.16),transparent 68%);
+}
+.hero h1 em {
+  background: linear-gradient(100deg,#d4bdff 0%,#f2a9d9 54%,#a8dcff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero-orbit { filter: drop-shadow(0 0 20px rgba(183,133,255,.18)); }
+.url-panel, .endpoint-card, .request-card, .manual-capture {
+  border-radius: 18px;
+}
+.url-panel-heading h2, .section-title h2, .request-head h2 {
+  font-size: 17px;
+}
+.url-panel-heading p, .section-title p, .hero-copy {
+  font-size: 13px;
+  line-height: 1.75;
+}
+.nav-link b { font-size: 13px; }
+.nav-link small { font-size: 11px; }
+.side-caption, .step-label, .section-kicker { font-size: 10px; }
+.url-form input { font-size: 14px; }
+.button { font-size: 12px; min-height: 36px; }
+.url-foot, .form-message { font-size: 12px; }
+.tab { font-size: 12px; padding: 12px 15px; }
+.definition-grid { gap: 13px; }
+.definition-field {
+  gap: 9px;
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(145deg,rgba(28,27,54,.92),rgba(14,19,37,.92));
+}
+.definition-label { font-size: 12px; letter-spacing: .065em; }
+.field-availability, .editor-hint { font-size: 10px; }
+.definition-field textarea {
+  min-height: 145px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  border-radius: 10px;
+}
+.extra-field-heading .definition-label { font-size: 12px; }
+.custom-field-panel h3 { font-size: 14px; }
+.custom-field-panel p { font-size: 11px; line-height: 1.6; }
+.custom-field-inputs .text-input { font-size: 12px; }
+.asset-card {
+  border-radius: 15px;
+  padding: 16px;
+  background: linear-gradient(150deg,rgba(29,28,55,.92),rgba(13,19,37,.94));
+}
+.asset-card h3 { font-size: 14px; }
+.asset-card p, .asset-state { font-size: 11px; line-height: 1.7; }
+.asset-preview-wrap { height: 145px; border: 1px solid rgba(190,169,255,.12); }
+.asset-actions .text-link { font-size: 11px; }
+.editor-card>span { font-size: 11px; }
+.editor-card textarea { min-height: 230px; font-size: 12px; }
+.code-top b, .code-label { font-size: 10px; }
+.info-note { font-size: 11px; line-height: 1.65; }
+.step b { font-size: 12px; }
+.step p { font-size: 11px; line-height: 1.7; }
+.endpoint-card label { font-size: 11px; }
+.text-input { font-size: 12px; }
+.input-hint, .security-note { font-size: 11px; line-height: 1.7; }
+.capture-state-line { font-size: 11px; }
+.request-detail, .capture-list-item, .capture-detail-head b { font-size: 11px; }
+.capture-list-top b, .capture-list-model { font-size: 11px; }
+.capture-list-meta, .capture-list-top small, .capture-source { font-size: 10px; }
+.message-item>div, .raw-request summary { font-size: 10px; }
+.message-item pre, .raw-request pre { font-size: 11px; line-height: 1.7; }
+.footer { font-size: 9px; }
+.help-button {
+  border-color: rgba(242,169,217,.26);
+  box-shadow: 0 0 18px rgba(190,110,255,.1);
+}
+.button-primary {
+  box-shadow: 0 8px 22px rgba(115,78,230,.2);
+}
+.button-primary:hover {
+  filter: brightness(1.09);
+  transform: translateY(-1px);
+}
+.surface:hover { border-color: rgba(205,168,255,.23); }
+@media(max-width:760px) {
+  .url-panel-heading h2, .section-title h2, .request-head h2 { font-size: 15px; }
+  .url-panel-heading p, .section-title p, .hero-copy { font-size: 12px; }
+  .definition-field textarea { min-height: 125px; font-size: 12px; }
+  .asset-card h3 { font-size: 13px; }
+}
