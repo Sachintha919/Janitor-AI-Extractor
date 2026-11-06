@@ -17,7 +17,7 @@ function currentDefinitions() {return {...cloneData(state.extraFields),...cloneD
 function displayField(value) {return valueText(value);}
 function updateField(input,key,isExtra=false) {
   const target=isExtra?state.extraFields:state.character,old=target[key],raw=input.value;
-  if(raw==="" ){target[key]="";return;}
+  if(raw==="" ){target[key]="";if(!isExtra)updateCard();return;}
   if(old&&typeof old==="object") {try{target[key]=JSON.parse(raw);}catch{target[key]=raw;}}
   else target[key]=raw;
   if(!isExtra) updateCard();
