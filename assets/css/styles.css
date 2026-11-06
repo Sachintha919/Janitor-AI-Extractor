@@ -292,9 +292,6 @@ h1 em { font-style: normal; background: linear-gradient(90deg,#b2a5ff 0%,#78dcca
 .editor-hint{color:#75839e;font-size:7px;line-height:1.5}
 .extra-field-heading{display:flex;justify-content:space-between;align-items:center}
 .icon-button{width:24px;height:24px;border:1px solid var(--line);border-radius:7px;background:transparent;color:#aeb9cf}.icon-button.danger{color:#e99da6}
-.custom-field-panel{display:grid;grid-template-columns:minmax(180px,.7fr) minmax(0,1.3fr);gap:14px;align-items:center;margin-top:14px;padding:16px}
-.custom-field-panel h3{margin:0 0 4px;font:600 11px "Space Grotesk",sans-serif}.custom-field-panel p{margin:0;color:var(--muted);font-size:8px}
-.custom-field-inputs{display:grid;grid-template-columns:1fr 1fr auto;gap:7px}.download-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .asset-preview-wrap{height:110px;display:grid;place-items:center;margin-bottom:12px;border-radius:9px;background:#0a1121;overflow:hidden}
 .asset-preview-wrap .asset-thumb{width:100%;height:100%;object-fit:contain;margin:0;background:transparent}
 .asset-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.text-link{color:#9eafff;font-size:8px;text-decoration:none}.text-link:hover{text-decoration:underline}
@@ -429,9 +426,6 @@ body {
   border-radius: 10px;
 }
 .extra-field-heading .definition-label { font-size: 12px; }
-.custom-field-panel h3 { font-size: 14px; }
-.custom-field-panel p { font-size: 11px; line-height: 1.6; }
-.custom-field-inputs .text-input { font-size: 12px; }
 .asset-card {
   border-radius: 15px;
   padding: 16px;
@@ -481,18 +475,6 @@ body {
   height: 230px;
   margin-right: 12px;
 }
-.hero-mascot {
-  position: absolute;
-  z-index: 2;
-  width: 178px;
-  height: 208px;
-  object-fit: contain;
-  bottom: -3px;
-  border-radius: 28px;
-  filter: drop-shadow(0 12px 30px rgba(13,8,30,.42));
-  -webkit-mask-image: linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%);
-  mask-image: linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%);
-}
 .orbit-core {
   z-index: 3;
   position: absolute;
@@ -512,7 +494,7 @@ body {
     margin-right: 0;
     transform: scale(.83);
   }
-  .hero-mascot { width: 145px; height: 170px; }
+
 }
 @media(max-width:440px) { .hero-orbit { display:none; } }
 
