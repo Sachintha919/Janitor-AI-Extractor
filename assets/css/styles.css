@@ -475,3 +475,43 @@ body {
   .definition-field textarea { min-height: 125px; font-size: 12px; }
   .asset-card h3 { font-size: 13px; }
 }
+
+.hero-orbit {
+  flex: 0 0 230px;
+  height: 230px;
+  margin-right: 12px;
+}
+.hero-mascot {
+  position: absolute;
+  z-index: 2;
+  width: 178px;
+  height: 208px;
+  object-fit: contain;
+  bottom: -3px;
+  border-radius: 28px;
+  filter: drop-shadow(0 12px 30px rgba(13,8,30,.42));
+  -webkit-mask-image: linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%);
+  mask-image: linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%);
+}
+.orbit-core {
+  z-index: 3;
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  width: 31px;
+  height: 31px;
+  border-radius: 10px;
+  font-size: 16px;
+  background: linear-gradient(135deg,rgba(195,139,255,.36),rgba(242,163,212,.2));
+}
+.hero-orbit .orbit { opacity: .6; }
+@media(max-width:760px) {
+  .hero-orbit {
+    flex-basis: 160px;
+    height: 175px;
+    margin-right: 0;
+    transform: scale(.83);
+  }
+  .hero-mascot { width: 145px; height: 170px; }
+}
+@media(max-width:440px) { .hero-orbit { display:none; } }
