@@ -40,15 +40,64 @@ function renderAssets() {
   setEnabled(["download-lorebook"],books.length>0);setEnabled(["download-assets-zip"],assets.length+books.length>0);
   if(!assets.length&&!books.length){$("#asset-results").innerHTML='<div class="empty-card surface compact-empty"><div class="asset-icon asset-violet">▧</div><h3>No assets imported</h3><p>Import a supported source or local image file to display assets here.</p></div>';return;}
   const imageHtml=assets.map((asset,i)=>'<article class="asset-card surface"><div class="asset-preview-wrap"><img class="asset-thumb" src="'+esc(asset.url)+'" alt="'+esc(asset.label||"Image")+'" loading="lazy" referrerpolicy="no-referrer"></div><h3>'+esc(asset.label||"Image")+'</h3><p class="asset-url">'+esc(asset.url.length>150?asset.url.slice(0,147)+"…":asset.url)+'</p><div class="asset-actions"><button class="button button-quiet" data-asset="'+i+'" type="button">Download image</button><a class="text-link" href="'+esc(asset.url)+'" target="_blank" rel="noopener noreferrer">Open source</a></div></article>').join("");
-  const bookHtml=books.map((book,i)=>'<article class="asset-card surface"><div class="asset-icon asset-teal">▤</div><h3>'+esc(book.name||"Lorebook")+'</h3><p>Imported lorebook / world-info object.</p><button type="button" class="button button-quiet" data-book="'+i+'">Download JSON</button></article>').join("");
+  const bookHtml=books.map((book,i)=>{
+    const isReference=book.data?.kind==="visible-lorebook-reference"||book.data?.kind==="lorebook-link";
+    const description=book.data?.description||book.data?.note||(isReference?"Visible Lorebook reference; the page did not expose its entry list.":"Lorebook / world-info data.");
+    return '<article class="asset-card surface"><div class="asset-icon asset-teal">▤</div><h3>'+esc(book.name||"Lorebook")+'</h3><p>'+esc(description)+'</p><button type="button" class="button button-quiet" data-book="'+i+'">'+(isReference?"Download reference":"Download JSON")+'</button></article>';
+  }).join("");
   $("#asset-results").innerHTML='<div class="asset-grid">'+imageHtml+bookHtml+"</div>";
   $$("[data-asset]").forEach(button=>button.addEventListener("click",async()=>{const asset=assets[Number(button.dataset.asset)];try{const response=await fetch(asset.url,{mode:"cors",credentials:"omit"});if(!response.ok)throw new Error("HTTP "+response.status);const blob=await response.blob();const ext=(asset.url.match(/\.(png|jpe?g|gif|webp|avif|svg)(?:[?#]|$)/i)||[])[1]||"img";downloadBlob(safeFilename(asset.label)+"."+ext,blob);}catch{window.open(asset.url,"_blank","noopener,noreferrer");toast("Direct download was blocked; opened the source instead.");}}));
   $$("[data-book]").forEach(button=>button.addEventListener("click",()=>{const book=books[Number(button.dataset.book)];downloadText(safeFilename(book.name||"lorebook")+".json",JSON.stringify(book.data,null,2),"application/json;charset=utf-8");}));
 }
+function previewText(value) {
+  return esc(valueText(value)).replace(/\\r?\\n/g,"<br>");
+}
+function generatedBotCardMarkup() {
+  const c=state.character||{};
+  const avatar=state.assets.find(item=>/avatar|profile|character|portrait/i.test((item.label||"")+" "+(item.source||"")))||state.assets[0];
+  const sections=[
+    ["Personality",c.personality],
+    ["Scenario",c.scenario],
+    ["First message",c.first_mes],
+    ["Example dialogs",c.mes_example]
+  ].filter(([,value])=>value!==undefined&&value!==null&&String(value).trim()!=="");
+  const avatarMarkup=avatar
+    ?'<img class="bot-card-avatar" src="'+esc(avatar.url)+'" alt="Character portrait">'
+    :'<div class="bot-card-placeholder">✧</div>';
+  const sectionMarkup=sections.map(([label,value])=>'<section class="bot-card-section"><h3>'+esc(label)+'</h3><p>'+previewText(value)+'</p></section>').join("");
+  const description=c.description?'<p class="bot-card-description">'+previewText(c.description)+'</p>':"";
+  return '<main class="bot-card"><div class="bot-card-cover"></div><div class="bot-card-main">'+avatarMarkup+
+    '<div class="bot-card-heading"><span class="bot-card-kicker">CHARACTER CARD</span><h1>'+esc(c.name||"Your character")+'</h1>'+
+    description+'</div>'+sectionMarkup+'</div><footer class="bot-card-footer">JANITORAI EXTRACTOR <span>✦</span></footer></main>';
+}
+const PREVIEW_CSS=`
+*{box-sizing:border-box}
+body{margin:0;padding:22px;background:radial-gradient(circle at 15% 0%,#342454,#111629 55%,#0b1020);color:#f4efff;font:15px/1.65 Inter,Segoe UI,Arial,sans-serif}
+.bot-card{max-width:760px;margin:0 auto;overflow:hidden;border:1px solid #66509b;border-radius:22px;background:#141b31;box-shadow:0 22px 60px #050711aa}
+.bot-card-cover{height:112px;background:radial-gradient(circle at 80% 22%,#e7a2d9 0 3px,transparent 5px),radial-gradient(circle at 15% 55%,#d8baff 0 2px,transparent 4px),linear-gradient(115deg,#49326d,#b06fb7 53%,#59458b)}
+.bot-card-main{padding:0 26px 25px}
+.bot-card-avatar{display:block;width:148px;height:148px;margin-top:-75px;object-fit:cover;border:4px solid #17172f;border-radius:22px;box-shadow:0 10px 26px #080a17aa}
+.bot-card-placeholder{display:grid;place-items:center;width:148px;height:148px;margin-top:-75px;border:4px solid #17172f;border-radius:22px;background:#33264c;color:#e9b8ec;font-size:54px}
+.bot-card-heading{margin:15px 0 22px}.bot-card-kicker{color:#d59fe8;font-size:10px;font-weight:800;letter-spacing:2px}
+.bot-card-heading h1{margin:4px 0 7px;font-size:30px;line-height:1.2;letter-spacing:-.7px}
+.bot-card-description{margin:0;color:#c9c4df;font-size:14px;line-height:1.7}
+.bot-card-section{margin-top:12px;padding:15px 17px;border:1px solid #39345a;border-radius:13px;background:linear-gradient(140deg,#20213e,#171d32)}
+.bot-card-section h3{margin:0 0 7px;color:#d4a4f2;font-size:12px;letter-spacing:.6px;text-transform:uppercase}
+.bot-card-section p{margin:0;color:#eeeaf8;overflow-wrap:anywhere}
+.bot-card-footer{display:flex;justify-content:space-between;padding:13px 22px;border-top:1px solid #39345a;color:#9786b8;font-size:10px;letter-spacing:1.2px}
+.bot-card-footer span{color:#f3a8da}
+@media(max-width:520px){body{padding:10px}.bot-card-main{padding:0 15px 18px}.bot-card-heading h1{font-size:25px}.bot-card-avatar,.bot-card-placeholder{width:120px;height:120px}}
+`;
+function getPreviewDocument() {
+  const markup=state.card.html.trim()||generatedBotCardMarkup();
+  const css=PREVIEW_CSS+"\\n"+state.card.css;
+  return '<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src https: data:; style-src \'unsafe-inline\' https:; font-src https: data:;"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body>'+markup+'</body></html>';
+}
 function updateCard() {
   state.card.html=$("#card-html").value;state.card.css=$("#card-css").value;
-  const html='<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src https: data:; style-src \'unsafe-inline\' https:; font-src https: data:;"><style>body{margin:14px;background:#f5f5f5;color:#222;font:14px/1.5 Arial,sans-serif}'+state.card.css+"</style></head><body>"+state.card.html+"</body></html>";
-  $("#card-preview").srcdoc=html;setEnabled(["download-html"],Boolean(state.card.html));setEnabled(["download-css"],Boolean(state.card.css));
+  $("#card-preview").srcdoc=getPreviewDocument();
+  setEnabled(["download-html"],Boolean(state.card.html.trim()||Object.keys(state.character).length));
+  setEnabled(["download-css"],Boolean(state.card.css));
 }
 function refresh() {
   renderDefinitions();renderAssets();$("#card-html").value=state.card.html;$("#card-css").value=state.card.css;updateCard();
@@ -109,7 +158,7 @@ function reset() {
 }
 function makeCharacterCard() {
   const d=currentDefinitions();
-  return {spec:"chara_card_v2",spec_version:"2.0",data:{...d,name:valueText(d.name),description:valueText(d.description),personality:valueText(d.personality),scenario:valueText(d.scenario),first_mes:valueText(d.first_mes),mes_example:valueText(d.mes_example),creator_notes:valueText(d.creator_notes),system_prompt:valueText(d.system_prompt),post_history_instructions:valueText(d.post_history_instructions),alternate_greetings:Array.isArray(d.alternate_greetings)?d.alternate_greetings:(d.alternate_greetings?[valueText(d.alternate_greetings)]:[]),tags:Array.isArray(d.tags)?d.tags:(d.tags?valueText(d.tags).split(",").map(x=>x.trim()).filter(Boolean):[]),extensions:d.extensions&&typeof d.extensions==="object"?d.extensions:{}}};
+  return {spec:"chara_card_v2",spec_version:"2.0",data:{...d,name:valueText(d.name),description:valueText(d.description),personality:valueText(d.personality),scenario:valueText(d.scenario),first_mes:valueText(d.first_mes),mes_example:valueText(d.mes_example),alternate_greetings:Array.isArray(d.alternate_greetings)?d.alternate_greetings:(d.alternate_greetings?[valueText(d.alternate_greetings)]:[]),character_book:d.character_book||{}}};
 }
 
 function exportSession() {
@@ -181,8 +230,6 @@ function init() {
   $("#clear-source").addEventListener("click",()=>{$("#source-data").value="";$("#source-file").value="";$("#parse-message").classList.remove("is-visible");});
   $("#clear-session").addEventListener("click",reset);
   $("#restore-original").addEventListener("click",restoreOriginal);
-  $("#add-custom-field").addEventListener("click",addExtra);
-  $("#custom-field-name").addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();addExtra();}});
   $("#download-txt").addEventListener("click",()=>downloadText(safeFilename(state.character.name)+".txt",Object.entries(currentDefinitions()).map(([key,value])=>{const field=FIELD_SCHEMA.find(x=>x.key===key);return (field?.label||key)+"\n"+valueText(value);}).join("\n\n")));
   $("#download-json").addEventListener("click",()=>downloadText(safeFilename(state.character.name)+".json",JSON.stringify(currentDefinitions(),null,2),"application/json;charset=utf-8"));
   $("#download-card").addEventListener("click",()=>downloadText(safeFilename(state.character.name)+"-character-card.json",JSON.stringify(makeCharacterCard(),null,2),"application/json;charset=utf-8"));
@@ -196,7 +243,7 @@ function init() {
     if(!files.length){toast("No assets could be bundled; some image hosts block downloads.");return;}downloadBlob("character-assets.zip",zipStore(files));toast("ZIP created with "+files.length+" file(s).");
   });
   $("#card-html").addEventListener("input",updateCard);$("#card-css").addEventListener("input",updateCard);
-  $("#download-html").addEventListener("click",()=>downloadText("character-card.html",state.card.html,"text/html;charset=utf-8"));
+  $("#download-html").addEventListener("click",()=>downloadText("character-card-preview.html",getPreviewDocument(),"text/html;charset=utf-8"));
   $("#download-css").addEventListener("click",()=>downloadText("character-card.css",state.card.css,"text/css;charset=utf-8"));
   $("#start-capture").addEventListener("click",()=>{if(!bridge?.send("SET_CAPTURE_ENABLED",{enabled:true})){toast("The companion extension is not connected.");return;}captureEnabled=true;badge($("#capture-status"),"Listening for requests","success");updateCaptureControls();});
   $("#stop-capture").addEventListener("click",()=>{bridge?.send("SET_CAPTURE_ENABLED",{enabled:false});captureEnabled=false;badge($("#capture-status"),"Capture stopped","muted");updateCaptureControls();});
