@@ -1,12 +1,12 @@
-# Janitor AI Extractor
+# JanitorAI Extractor
 
-![Janitor AI Extractor banner](assets/images/banner.svg)
+![JanitorAI Extractor banner](assets/images/banner.svg)
 
 **A browser-based workspace to import, inspect, edit and export character data, with a companion-extension bridge for live extraction and prompt capture.**
 
 ## Features
 
-- **Normal Extraction:** open a Janitor AI character profile from the workspace and automatically import accessible accordion sections, visible images and page assets through the separate Brave extension; manual JSON, PNG character-card, HTML, text and image imports are also supported.
+- **Normal Extraction:** open a Janitor AI character profile from the workspace and import the core character sections (Name, Description, Personality, Scenario, First Message, Alternate Greetings, Example Dialogue and Character Book), visible images and Lorebook references through the separate Brave extension; manual JSON, PNG character-card, HTML, text and image imports are also supported.
 - **Definitions:** edit common character fields, retain additional fields, restore the imported snapshot and export TXT, JSON or Character Card V2-shaped JSON.
 - **Assets:** preview and download imported images, export lorebook/world-info data and create an assets ZIP where browser permissions allow.
 - **Card Design:** edit supplied HTML/CSS and preview it inside a sandboxed iframe.
@@ -15,7 +15,7 @@
 
 ## Browser-only architecture
 
-The web application is static and does not run a Node.js API server. The separate Brave extension operates inside the signed-in browser session: it imports accessible character-page HTML and assets, and it can intercept the configured custom-proxy chat request, capture its sanitized request body and return a mock OpenAI-compatible response. The extension sends approved import and capture data to this workspace through the documented bridge.
+The web application is static and does not run a Node.js API server. The separate Brave extension operates inside the signed-in browser session: it imports accessible character-page HTML and assets, and it retains the previously working local mock-proxy interception behavior. The proxy display name and sample API key shown in its popup are labels only; the sample key is not sent to Janitor AI or a provider by the extension. The extension sends approved import and capture data to this workspace through the documented bridge.
 
 **The extension is delivered separately and is not included in this repository.** Install the companion ZIP in Brave and keep the workspace open. When you open a character URL from the workspace, the extension automatically imports the accessible page after Janitor AI renders it; the popup also provides a manual import fallback.
 
@@ -36,7 +36,7 @@ To preview the static site locally, serve the repository root with any static HT
 5. Edit fields as needed. Arrays and objects should be kept as valid JSON in their editors.
 6. Export the edited definitions, Character Card JSON, original source or complete extraction session.
 
-Supported imports include ordinary JSON, common Character Card V2-style spec/data objects, PNG chara/ccv3 metadata where supported by the browser, HTML, text, CSS and local image files. Parsing is best-effort: unknown fields are retained as additional fields when present in the character data object.
+Supported imports include ordinary JSON, common Character Card V2-style spec/data objects, PNG chara/ccv3 metadata where supported by the browser, HTML, text, CSS and local image files. Parsing is best-effort: unknown fields are retained as additional fields when present in the character data object. Creator notes, System Prompt, Post-history Instructions, Creator, Group-only Greetings, Tags and Extensions are omitted from the normal definitions view.
 
 Some remote image hosts block cross-origin downloads. In that case, open the original image source and save it manually. ZIP export includes only remote assets that the browser is permitted to fetch.
 
