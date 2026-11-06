@@ -515,3 +515,99 @@ body {
   .hero-mascot { width: 145px; height: 170px; }
 }
 @media(max-width:440px) { .hero-orbit { display:none; } }
+
+
+/* v1.2 clarity, character guide and larger typography */
+body { font-size: 16px; }
+.brand-name { font-size: 18px; letter-spacing: -.45px; }
+.brand-name small { font-size: 9px; }
+.mobile-brand > b { font-size: 17px; }
+.side-caption { font-size: 11px; }
+.nav-link b { font-size: 14px; }
+.nav-link small { font-size: 12px; }
+.sidebar-card b { font-size: 13px; }
+.sidebar-card p { font-size: 12px; line-height: 1.7; }
+.sidebar-status { font-size: 10px; }
+.crumb { font-size: 13px; }
+.connection-state { font-size: 12px; padding: 8px 12px; }
+.connection-state i { width: 8px; height: 8px; background: var(--amber); }
+.connection-state.is-connected i {
+  background: var(--teal);
+  box-shadow: 0 0 0 4px rgba(103,223,197,.12), 0 0 12px rgba(103,223,197,.7);
+}
+.connection-state.is-connected { color: #b4f0e3; border-color: rgba(103,223,197,.26); }
+.hero-copy { font-size: 15px; line-height: 1.8; }
+.eyebrow { font-size: 11px; }
+.url-panel-heading h2 { font-size: 19px; }
+.url-panel-heading p { font-size: 14px; line-height: 1.7; }
+.url-form input { font-size: 15px; }
+.url-form .button { font-size: 13px; }
+.url-foot, .form-message { font-size: 12px; }
+.field-label { font-size: 13px; }
+.source-area { font-size: 13px; line-height: 1.75; min-height: 132px; }
+.quick-guide {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 9px;
+  margin-top: 12px;
+}
+.guide-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(165,150,255,.16);
+  border-radius: 11px;
+  background: linear-gradient(145deg,rgba(36,31,67,.68),rgba(13,20,40,.74));
+}
+.guide-step > span {
+  flex: 0 0 24px;
+  width: 24px; height: 24px;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  background: rgba(165,150,255,.17);
+  color: #d3c4ff;
+  font-size: 11px; font-weight: 800;
+}
+.guide-step b { display:block; color:#e5e8fb; font-size:12px; }
+.guide-step small { display:block; margin-top:3px; color:#9da9c3; font-size:11px; line-height:1.5; }
+.definition-label { font-size: 13px; }
+.field-availability { font-size: 11px; }
+.definition-field textarea { font-size: 14px; min-height: 138px; line-height: 1.75; }
+.editor-hint { font-size: 11px; }
+.section-title h2 { font-size: 19px; }
+.section-title p { font-size: 13px; line-height: 1.7; }
+.tab { font-size: 13px; }
+.asset-card h3 { font-size: 15px; }
+.asset-card p { font-size: 12px; line-height: 1.7; }
+.asset-actions .button, .asset-actions .text-link { font-size: 12px; }
+.editor-card > span { font-size: 12px; }
+.editor-card textarea { font-size: 13px; line-height: 1.7; }
+#card-preview { height: 460px; background: #10162a; }
+.code-top b { font-size: 12px; }
+.code-label { font-size: 9px; }
+.info-note { font-size: 12px; line-height: 1.7; }
+.step b { font-size: 13px; }
+.step p { font-size: 12px; line-height: 1.7; }
+.endpoint-card label { font-size: 12px; }
+.text-input { font-size: 13px; }
+.input-hint, .security-note { font-size: 12px; line-height: 1.7; }
+.capture-state-line { font-size: 12px; }
+.capture-list-item { font-size: 12px; }
+.capture-list-top b, .capture-list-model { font-size: 12px; }
+.capture-list-meta, .capture-list-top small, .capture-source { font-size: 11px; }
+.message-item pre, .raw-request pre { font-size: 12px; }
+.footer { font-size: 10px; }
+@media(max-width:900px) {
+  .quick-guide { grid-template-columns: 1fr; }
+}
+@media(max-width:760px) {
+  body { font-size: 15px; }
+  .hero-copy { font-size: 13px; }
+  .url-panel-heading h2 { font-size: 17px; }
+  .url-panel-heading p { font-size: 12px; }
+  .source-area { font-size: 12px; }
+  .definition-field textarea { font-size: 13px; min-height: 125px; }
+  #card-preview { height: 400px; }
+}
