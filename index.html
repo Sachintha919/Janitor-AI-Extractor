@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#090d19">
 <meta name="description" content="A private browser workspace to inspect, organize and export character data and prompt captures.">
-<title>Janitor AI Extractor — Character Workspace</title>
+<title>JanitorAI Extractor — Character Workspace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="icon" type="image/png" href="./assets/images/mascot.png">
+<link rel="icon" type="image/svg+xml" href="./assets/images/brand-icon.svg">
 <link rel="stylesheet" href="./assets/css/styles.css">
 </head>
 <body>
 <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
 <div class="app-shell">
 <aside class="sidebar">
-<a class="brand" href="./" aria-label="Janitor AI Extractor home"><span class="brand-mark"><i></i><i></i><i></i></span><span class="brand-name">JanitorAI<span> Extractor</span><small>CHARACTER WORKSPACE</small></span></a>
+<a class="brand" href="./" aria-label="JanitorAI Extractor home"><span class="brand-mark"><i></i><i></i><i></i></span><span class="brand-name">JanitorAI <span>Extractor</span><small>CHARACTER WORKSPACE</small></span></a>
 <div class="side-caption">WORKSPACE</div>
 <nav class="primary-nav" aria-label="Workspace navigation">
 <button class="nav-link is-active" type="button" data-view="normal"><span class="nav-icon">⌕</span><span><b>Normal extraction</b><small>Definitions, assets & card</small></span></button>
@@ -31,11 +31,11 @@
 <div class="top-actions"><span class="connection-state" title="Brave extension connection"><i></i><span id="extension-status">Extension disconnected</span></span><button class="help-button" id="help-button" type="button" title="Help" aria-label="Help">?</button></div>
 </header>
 <section class="view is-active" id="normal-view">
-<div class="hero"><div><div class="eyebrow"><span></span> CHARACTER WORKSPACE</div><h1>Bring character details<br><em>into one place.</em></h1><p class="hero-copy">Import accessible character details, preview a clean bot card, review page images and Lorebook references, then export what you need. Your companion extension reads the content available in your signed-in browser page.</p></div><div class="hero-orbit" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><img class="hero-mascot" src="./assets/images/mascot.png" alt="Anime girl mascot"><div class="orbit-core">✳</div><span class="orbit-star star-a">✦</span><span class="orbit-star star-b">✧</span></div></div>
+<div class="hero"><div><div class="eyebrow"><span></span> CHARACTER WORKSPACE</div><h1>Bring character details<br><em>into one place.</em></h1><p class="hero-copy">Import accessible character details, preview a clean bot card, review page images and Lorebook references, then export what you need. Your companion extension reads the content available in your signed-in browser page.</p></div><div class="hero-orbit" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="hero-visual-card"><div class="hero-visual-top"><span></span><span></span><span></span><b>EXTRACTOR</b></div><div class="hero-document"><div class="document-symbol">▤</div><div class="document-lines"><i></i><i></i><i></i><i></i></div><div class="document-chip">CHARACTER DATA</div></div><div class="hero-visual-foot"><span>DEFINITIONS</span><span>ASSETS</span><span>LOREBOOKS</span></div></div><div class="orbit-core">✦</div><span class="orbit-star star-a">✧</span><span class="orbit-star star-b">✳</span></div></div>
 <section class="url-panel surface">
-<div class="url-panel-heading"><div class="panel-icon violet">↗</div><div><h2>Character page & source import</h2><p>Open a character profile. With the Brave extension connected, its accessible sections and assets will be sent back to this workspace automatically.</p></div><span class="step-label">STEP 01</span></div>
+<div class="url-panel-heading"><div class="panel-icon violet">↗</div><div><h2>Character page & source import</h2><p>Paste a Janitor AI character profile link below. Open it with the Brave extension connected, and the page's available definitions, images and Lorebook references will return here.</p></div><span class="step-label">STEP 01</span></div>
 <form id="character-form" class="url-form"><span class="url-prefix">URL</span><label class="sr-only" for="character-url">Janitor AI character URL</label><input id="character-url" type="url" placeholder="https://janitorai.com/characters/..." autocomplete="url" required><button class="button button-primary" type="submit">Open character <span>↗</span></button></form>
-<div class="quick-guide" aria-label="How character import works"><div class="guide-step"><span>1</span><div><b>Paste profile URL</b><small>Use the Janitor AI character profile link.</small></div></div><div class="guide-step"><span>2</span><div><b>Open character</b><small>The extension reads the visible page after it loads.</small></div></div><div class="guide-step"><span>3</span><div><b>Return here</b><small>Definitions, images and Lorebook references appear below.</small></div></div></div>
+<div class="quick-guide" aria-label="How character import works"><div class="guide-step"><span>1</span><div><b>Paste profile URL</b><small>Use the Janitor AI character profile link.</small></div></div><div class="guide-step"><span>2</span><div><b>Open character</b><small>Wait for the page to finish loading.</small></div></div><div class="guide-step"><span>3</span><div><b>Review your data</b><small>Keep this workspace open; extracted details appear below.</small></div></div></div>
 <div class="url-foot"><span class="check-mark">✓</span><span id="source-summary">No source imported</span></div><div class="form-message" id="url-message" role="status"></div>
 <div class="import-grid"><div><label class="field-label" for="source-data">Paste accessible character JSON, HTML or copied page content</label><textarea id="source-data" class="source-area" placeholder='Paste Character Card JSON, page HTML, or copied character definitions here…'></textarea><div class="inline-actions"><label class="button button-quiet file-button">Import files<input id="source-file" type="file" accept=".json,.txt,.html,.htm,.css,.png,.jpg,.jpeg,.webp,.gif,.avif,image/png,image/jpeg,image/webp,image/gif" multiple hidden></label><button class="button button-primary" id="parse-source" type="button">Extract fields <span>→</span></button><button class="button button-quiet" id="clear-source" type="button">Clear input</button><button class="button button-quiet" id="clear-session" type="button">Clear session</button></div></div><div class="import-help"><div class="help-icon">✧</div><b>What can be imported?</b><p>Character Card JSON, PNG cards with embedded metadata, copied definitions, HTML, text files and image files.</p><ul><li>Only data you provide or the extension returns is processed.</li><li>Unavailable fields remain marked as unavailable.</li><li>Original imported data can be downloaded separately.</li></ul></div></div>
 <div class="form-message" id="parse-message" role="status" aria-live="polite"></div>
@@ -58,7 +58,7 @@
 </div>
 <section class="manual-capture surface"><div class="section-title"><div><h2>Manual request import</h2><p>Inspect a saved OpenAI-compatible request JSON without the extension.</p></div></div><textarea id="manual-request" class="source-area" placeholder='Paste a chat-completion request JSON containing a messages array…'></textarea><div class="inline-actions"><button class="button button-primary" id="manual-request-import" type="button">Inspect request JSON</button><button class="button button-quiet" id="clear-manual" type="button">Clear</button></div></section>
 </section>
-<footer class="footer"><span>JANITOR AI EXTRACTOR <b>·</b> BROWSER WORKSPACE</span><span>Temporary by design <i>✳</i></span></footer>
+<footer class="footer"><span>JANITORAI EXTRACTOR <b>·</b> BROWSER WORKSPACE</span><span>Temporary by design <i>✳</i></span></footer>
 </main>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
