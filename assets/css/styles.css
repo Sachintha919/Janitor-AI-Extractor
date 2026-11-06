@@ -331,3 +331,27 @@ h1 em { font-style: normal; background: linear-gradient(90deg,#b2a5ff 0%,#78dcca
 .form-message.is-error{color:#f09aa4}
 @media(max-width:900px){.custom-field-panel{grid-template-columns:1fr}.custom-field-inputs{grid-template-columns:1fr 1fr}.capture-layout{grid-template-columns:1fr}.capture-list{max-height:180px}.design-editors{grid-template-columns:1fr}}
 @media(max-width:650px){.custom-field-inputs{grid-template-columns:1fr}.capture-layout{grid-template-columns:1fr}.capture-grid{grid-template-columns:1fr}.capture-state-line{display:block}.capture-state-line b{display:block;text-align:left;margin-top:4px}.download-row{display:grid}.download-row .button{width:100%}}
+
+/* Readability pass: bring compact UI labels and helper copy to comfortable sizes. */
+body { font-size: 15px; }
+.eyebrow { font-size: 10px; }
+.hero-copy { font-size: 13px; }
+.crumb { font-size: 12px; }
+.connection-state { font-size: 11px; }
+.nav-link b { font-size: 12px; }
+.nav-link small { font-size: 10px; }
+.side-caption, .step-label { font-size: 9px; }
+.sidebar-card b { font-size: 12px; }
+.sidebar-card p { font-size: 11px; }
+.url-panel p, .section-title p, .endpoint-card .section-title p, .request-card .section-title p { font-size: 11px; }
+.url-form input { font-size: 12px; }
+.button { font-size: 11px; }
+.url-foot, .form-message { font-size: 10px; }
+.field-label, .definition-label { font-size: 12px; }
+.field-availability, .editor-hint { font-size: 10px; }
+.section-kicker { font-size: 9px; }
+.input-hint, .security-note { font-size: 11px; }
+@media (max-width: 760px) {
+  .hero-copy { font-size: 12px; }
+  .url-panel p, .section-title p, .endpoint-card .section-title p, .request-card .section-title p { font-size: 10px; }
+}
