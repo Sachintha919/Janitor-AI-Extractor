@@ -13,16 +13,20 @@ Character data and prompt captures live in the current page's JavaScript memory.
 - utils/download.js: safe filenames, browser downloads and a small dependency-free ZIP writer.
 - app.js: UI orchestration, definition editing, assets, prompt capture and temporary session state.
 
-## Future extension responsibilities
+## Companion extension responsibilities
 
-The companion extension is not part of this repository. It will have two browser contexts:
+The companion extension is delivered as a separate ZIP and has two browser contexts:
 
-1. A Janitor AI page content script that detects the user's configured custom-proxy request and, when capture is enabled, supplies a local mock completion response without contacting the configured provider.
-2. A content script on the Extractor web-app origin that connects to the page bridge and forwards captured request/character data to the open workspace tab.
+1. A Janitor AI page content script that reads the accessible rendered page, sends the full bounded page HTML plus image/lorebook references to the workspace, and detects the user's configured custom-proxy request. When capture is enabled, it supplies a local mock completion response without contacting the configured provider.
+2. A content script on the Extractor web-app origin that connects to the page bridge and forwards sanitized request/character data to one open workspace tab.
 
 The exact interception method must be verified against Janitor AI's current fetch/XHR implementation and the target Brave/Chromium version. The extension must not bypass access controls or attempt to read server-only data.
 
 ## Data flow
+
+    Workspace opens target character URL
+      -> companion extension auto-imports accessible page HTML and assets
+      -> web app parses definition accordion panels independently
 
     Janitor AI tab
       -> companion extension observes the configured chat request
