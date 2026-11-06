@@ -86,7 +86,9 @@ The extension bridge protocol is documented in docs/EXTENSION_BRIDGE.md. The cus
 
 ## Companion extension
 
-The separate Brave extension ZIP includes a Manifest V3 service worker, Janitor AI page content script, Extractor app bridge, branded PNG icons and a redesigned popup. Its current package is version 1.0.3. The extension package is maintained separately from the static web application repository.
+The separate Brave extension ZIP includes a Manifest V3 service worker, Janitor AI page content script, Extractor app bridge, branded PNG toolbar icons and a redesigned popup. Its current package is version 1.0.4 and is maintained separately from this repository.
+
+The extension displays these Custom Proxy values for manual entry in Janitor AI: **Name:** `JanitorAI Extractor` (display label); **API key:** `janitorai-extractor-key` (sample placeholder); **Proxy URL:** `https://janitor-extractor.invalid/v1`. Keep the `.invalid` domain: the extension intercepts matching requests locally before they reach the network. The sample key is not forwarded to the page or any provider.
 
 ## Development checks
 
