@@ -6,7 +6,7 @@
 
 ## Features
 
-- **Normal Extraction:** paste or import Character Card JSON, supported PNG character cards, HTML, text and local images.
+- **Normal Extraction:** open a Janitor AI character profile from the workspace and automatically import accessible accordion sections, visible images and page assets through the separate Brave extension; manual JSON, PNG character-card, HTML, text and image imports are also supported.
 - **Definitions:** edit common character fields, retain additional fields, restore the imported snapshot and export TXT, JSON or Character Card V2-shaped JSON.
 - **Assets:** preview and download imported images, export lorebook/world-info data and create an assets ZIP where browser permissions allow.
 - **Card Design:** edit supplied HTML/CSS and preview it inside a sandboxed iframe.
@@ -15,9 +15,9 @@
 
 ## Browser-only architecture
 
-The web application is static and does not run a Node.js API server. The future Brave extension will operate inside the signed-in Janitor AI browser session, observe the configured custom-proxy chat request, capture the request body and return a mock OpenAI-compatible response. It will then send sanitized capture data to this workspace through the documented extension bridge.
+The web application is static and does not run a Node.js API server. The separate Brave extension operates inside the signed-in browser session: it imports accessible character-page HTML and assets, and it can intercept the configured custom-proxy chat request, capture its sanitized request body and return a mock OpenAI-compatible response. The extension sends approved import and capture data to this workspace through the documented bridge.
 
-**The extension is not included in this repository.** It will be developed and delivered separately after the web application is complete. Until it is installed, the workspace supports manual source import and manual request JSON inspection; the extension status remains Disconnected.
+**The extension is delivered separately and is not included in this repository.** Install the companion ZIP in Brave and keep the workspace open. When you open a character URL from the workspace, the extension automatically imports the accessible page after Janitor AI renders it; the popup also provides a manual import fallback.
 
 Captured prompts and imported character data are held in page memory only. Refreshing or closing the tab clears the current workspace. Downloads are initiated by the user. The application does not request Janitor AI passwords, session cookies or API authorization keys.
 
@@ -29,9 +29,10 @@ To preview the static site locally, serve the repository root with any static HT
 
 ## Importing character data
 
-1. Paste accessible JSON, HTML or labelled text into the source box, or select supported files.
-2. Choose **Extract fields**.
-3. Review the Definitions, Assets and Card Design tabs.
+1. Open the workspace in Brave and make sure the companion extension shows Connected.
+2. Paste a Janitor AI character profile URL into **Character page & source import**, then choose **Open character**.
+3. The extension imports the accessible page after it renders. You can also use the extension popup's **Import visible character page** button on a character or chat tab.
+4. Review Definitions, Assets and Card Design. Manual JSON, HTML, text, PNG character cards and local images can still be imported through the source box.
 4. Edit fields as needed. Arrays and objects should be kept as valid JSON in their editors.
 5. Export the edited definitions, Character Card JSON, original source or complete extraction session.
 
@@ -68,6 +69,7 @@ The extension bridge protocol is documented in docs/EXTENSION_BRIDGE.md. The exa
     ├── assets/
     │   ├── css/styles.css
     │   ├── images/banner.svg
+    │   ├── images/mascot.svg
     │   └── js/
     │       ├── app.js
     │       ├── core/extension-bridge.js
@@ -82,7 +84,7 @@ The extension bridge protocol is documented in docs/EXTENSION_BRIDGE.md. The exa
         ├── validate.yml
         └── pages.yml
 
-## Development checks
+## Companion extension\n\nThe separate Brave extension ZIP includes a Manifest V3 service worker, Janitor AI page content script, Extractor app bridge, branded PNG icons and a redesigned popup. Its current package is version 1.0.3. The extension package is maintained separately from the static web application repository.\n\n## Development checks
 
 Node.js is used only by the optional automated test suite. The deployed web app itself is static and requires no Node runtime.
 
