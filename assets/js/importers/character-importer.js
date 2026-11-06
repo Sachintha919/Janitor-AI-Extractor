@@ -6,19 +6,12 @@ export const FIELD_SCHEMA = [
   ["first_mes","First message",["first_mes","first_message","greeting","initial_message"]],
   ["alternate_greetings","Alternate greetings",["alternate_greetings","greetings"]],
   ["mes_example","Example dialogue",["mes_example","example_dialogue","example_messages"]],
-  ["creator_notes","Creator notes",["creator_notes","notes"]],
-  ["system_prompt","System prompt",["system_prompt","system"]],
-  ["post_history_instructions","Post-history instructions",["post_history_instructions","jailbreak","jailbreak_prompt"]],
-  ["creator","Creator",["creator","author"]],
-  ["character_version","Character version",["character_version","version"]],
-  ["tags","Tags",["tags"]],
-  ["group_only_greetings","Group-only greetings",["group_only_greetings"]],
-  ["extensions","Extensions",["extensions"]],
   ["character_book","Character book / lorebook",["character_book","characterBook"]]
-].map(([key,label,aliases])=>({key,label,aliases,kind:["alternate_greetings","tags","group_only_greetings","extensions","character_book"].includes(key)?"json":"text"}));
+].map(([key,label,aliases])=>({key,label,aliases,kind:["alternate_greetings","character_book"].includes(key)?"json":"text"}));
 
 const KNOWN = new Set(FIELD_SCHEMA.flatMap(field=>field.aliases.map(x=>x.toLowerCase())));
 const WRAPPERS = new Set(["spec","spec_version","data","character","character_data","characterdata","bot"]);
+const IGNORED_FIELDS = new Set(["creator_notes","creatornotes","system_prompt","systemprompt","post_history_instructions","posthistoryinstructions","jailbreak","jailbreak_prompt","creator","author","group_only_greetings","grouponlygreetings","tags","extensions"]);
 
 export function cloneData(value) {
   if (value===undefined) return undefined;
@@ -47,15 +40,13 @@ function extractFields(source) {
     const value=findValue(root,field.aliases);
     if(value!==undefined) character[field.key]=cloneData(value);
   }
-  for(const [key,value] of Object.entries(root)) if(!KNOWN.has(key.toLowerCase())&&!WRAPPERS.has(key.toLowerCase())) extraFields[key]=cloneData(value);
+  for(const [key,value] of Object.entries(root)) if(!KNOWN.has(key.toLowerCase())&&!WRAPPERS.has(key.toLowerCase())&&!IGNORED_FIELDS.has(key.toLowerCase())) extraFields[key]=cloneData(value);
   return {character,extraFields};
 }
 const TEXT_LABELS=new Map([
   ["name","name"],["charactername","name"],["description","description"],["personality","personality"],["persona","personality"],
   ["scenario","scenario"],["firstmessage","first_mes"],["firstmes","first_mes"],["greeting","first_mes"],
   ["alternategreetings","alternate_greetings"],["exampledialogue","mes_example"],["mesexample","mes_example"],
-  ["creatornotes","creator_notes"],["systemprompt","system_prompt"],["posthistoryinstructions","post_history_instructions"],
-  ["creator","creator"],["author","creator"],["version","character_version"],["characterversion","character_version"],["tags","tags"]
 ]);
 function parseText(raw) {
   const result={}; let current=null;
@@ -140,7 +131,7 @@ export function extractJanitorSections(doc) {
   return {character,extraFields};
 }
 function parseHtml(raw,sourceUrl="") {
-  const result={object:null,html:"",css:"",assets:[],meta:{},sections:{character:{},extraFields:{}}};
+  const result={object:null,html:"",css:"",assets:[],lorebooks:[],meta:{},sections:{character:{},extraFields:{}}};
   if(typeof DOMParser==="undefined"||!/<(?:html|body|div|section|article|main)\b/i.test(raw)) return result;
   const doc=new DOMParser().parseFromString(raw,"text/html");
   for(const script of doc.querySelectorAll('script[type="application/json"],script#__NEXT_DATA__,script#__NUXT_DATA__')) {
@@ -151,6 +142,27 @@ function parseHtml(raw,sourceUrl="") {
   if(title) result.meta.name=title;
   if(description) result.meta.description=description;
   result.sections=extractJanitorSections(doc);
+  const seenBooks=new Set();
+  for(const badge of doc.querySelectorAll('[class*="typeBadge"], [class*="TypeBadge"]')) {
+    if(String(badge.textContent||"").trim().toLowerCase()!=="lorebook") continue;
+    const card=badge.closest('[role="button"], [class*="_card_"], [class*="card"]')||badge.parentElement?.parentElement;
+    if(!card) continue;
+    const name=(card.querySelector('[class*="cardTitle"], h3, h4')?.textContent||"Lorebook reference").trim();
+    const description=(card.querySelector('[class*="cardDescription"], p')?.textContent||"").trim();
+    const metadata=(card.querySelector('[class*="cardMeta"]')?.textContent||"").trim();
+    const key=name.toLowerCase();
+    if(seenBooks.has(key)) continue;
+    seenBooks.add(key);
+    result.lorebooks.push({name,data:{kind:"visible-lorebook-reference",title:name,description,metadata,sourcePage:baseUrl||doc.baseURI,entriesIncluded:false,note:"The character page shows this Lorebook reference card, but not its actual entry list. Open the Lorebook page to import entries that are visible there."},source:"Visible Janitor AI Lorebook card"});
+  }
+  for(const anchor of doc.querySelectorAll("a[href]")) {
+    if(!/lore.?book|world.?info/i.test((anchor.textContent||"")+" "+anchor.href)) continue;
+    const name=(anchor.textContent||"Lorebook link").trim()||"Lorebook link";
+    const key=anchor.href.toLowerCase();
+    if(seenBooks.has(key)) continue;
+    seenBooks.add(key);
+    result.lorebooks.push({name,data:{kind:"lorebook-link",url:anchor.href,label:name},source:"Visible Lorebook link"});
+  }
   result.html=doc.querySelector('[class*="characterInfoAccordionWrapper"]')?.innerHTML
     ||doc.querySelector("main")?.innerHTML||doc.body?.innerHTML||"";
   result.css=[...doc.querySelectorAll("style")].map(node=>node.textContent||"").filter(Boolean).join("\n\n");
@@ -193,8 +205,9 @@ export function parseSource(raw,options={}) {
   if(!extracted.character.description&&html.meta.description) extracted.character.description=html.meta.description;
   const resources=sourceObject?collectResources(sourceObject):{assets:[],lorebooks:[]};
   const assets=[...new Map([...resources.assets,...html.assets].map(item=>[item.url,item])).values()];
+  const lorebooks=[...new Map([...(resources.lorebooks||[]),...(html.lorebooks||[])].map(book=>[(book.name||"book")+JSON.stringify(book.data),book])).values()];
   return {
-    ...extracted,assets,lorebooks:resources.lorebooks,html:html.html,css:html.css,
+    ...extracted,assets,lorebooks,html:html.html,css:html.css,
     rawData:cloneData(sourceObject),rawText:text,rawType:validJson?"json":"text",
     sourceName:options.fileName||"Pasted source",sourceUrl:options.sourceUrl||""
   };
