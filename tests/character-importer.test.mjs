@@ -14,7 +14,6 @@ test("parses common Character Card V2 data fields", () => {
   assert.equal(result.character.name, "Jane");
   assert.equal(result.character.first_mes, "Hello");
   assert.deepEqual(result.character.alternate_greetings, ["Hi", "Hey"]);
-  assert.deepEqual(result.character.tags, ["romance", "fantasy"]);
   assert.equal(result.character.creator, "Tester");
 });
 
@@ -48,7 +47,6 @@ test("parses labelled text definitions", () => {
 test("retains structured arrays", () => {
   const result = parseSource(JSON.stringify({ name: "Array test", alternate_greetings: ["One", "Two"], tags: ["a", "b"] }));
   assert.deepEqual(result.character.alternate_greetings, ["One", "Two"]);
-  assert.deepEqual(result.character.tags, ["a", "b"]);
 });
 
 
@@ -82,4 +80,26 @@ test("extracts every Janitor AI accordion section and ignores token counters", a
   assert.equal(result.character.first_mes, fixtures[2][1]);
   assert.equal(result.character.mes_example, fixtures[3][1]);
   assert.deepEqual(result.extraFields, {});
+});
+
+
+test("omits non-essential metadata from normal definitions and extra fields", () => {
+  const result = parseSource(JSON.stringify({
+    data: {
+      name: "Field filter test",
+      personality: "Warm",
+      creator_notes: "Do not show",
+      system_prompt: "Do not show",
+      post_history_instructions: "Do not show",
+      creator: "Do not show",
+      group_only_greetings: ["Do not show"],
+      tags: ["Do not show"],
+      extensions: { custom: true }
+    }
+  }));
+  for (const key of ["creator_notes","system_prompt","post_history_instructions","creator","group_only_greetings","tags","extensions"]) {
+    assert.equal(Object.hasOwn(result.character, key), false, key + " should not be a standard definition");
+    assert.equal(Object.hasOwn(result.extraFields, key), false, key + " should not appear in extra fields");
+  }
+  assert.equal(result.character.personality, "Warm");
 });
