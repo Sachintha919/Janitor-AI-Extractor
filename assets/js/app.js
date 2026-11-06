@@ -44,7 +44,7 @@ function renderAssets() {
   const bookHtml=books.map((book,i)=>{
     const isReference=book.data?.kind==="visible-lorebook-reference"||book.data?.kind==="lorebook-link";
     const description=book.data?.description||book.data?.note||(isReference?(book.data?.url?"A visible Lorebook / LoreBary reference. Open the source to view its full content.":"The character page shows this Lorebook reference, but not its entry list."):"Lorebook / world-info data.");
-    const sourceUrl=isReference&&/^https?:\\/\\//i.test(String(book.data?.url||""))
+    const sourceUrl=isReference&&String(book.data?.url||"").startsWith("http")
       ?'<a class="text-link" href="'+esc(book.data.url)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
       :"";
     return '<article class="asset-card surface"><div class="asset-icon asset-teal">▤</div><h3>'+esc(book.name||"Lorebook")+'</h3><p>'+esc(description)+'</p><div class="asset-actions">'+sourceUrl+'<button type="button" class="button button-quiet" data-book="'+i+'">'+(isReference?"Download reference":"Download JSON")+'</button></div></article>';
