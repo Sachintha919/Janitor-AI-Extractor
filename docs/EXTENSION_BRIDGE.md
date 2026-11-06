@@ -2,7 +2,7 @@
 
 **Protocol:** JANITOR_EXTRACTOR_BRIDGE  
 **Version:** 1  
-**Status:** Web-app receiver implemented; companion extension is delivered separately (v1.0.3).
+**Status:** Web-app receiver implemented; companion extension is delivered separately (v1.0.4).
 
 The web app and the extension content script injected into the Extractor web-app origin communicate with window.postMessage. Messages must use the exact page origin as targetOrigin.
 
@@ -70,7 +70,7 @@ Only the request body is required. The extension may include safe endpoint/metho
 
 ## Character data shape
 
-character may be a Character Card V2 data object or normalized definitions object. Prefer sending the complete page HTML as html (or pageHtml) so the web app can parse all Janitor accordion panels independently, including Scenario, Personality, Initial Messages, Example Dialogs and additional sections. If structured character fields are also supplied, the web app merges them without overwriting non-empty page-extracted fields. assets is an array of { id?, url, label, source?, type? }; lorebooks is an array of { name, data }; cardDesign may contain { html, css }.
+character may be a Character Card V2 data object or normalized definitions object. Prefer sending the complete page HTML as html (or pageHtml) so the web app can parse all Janitor accordion panels independently, including Scenario, Personality, Initial Messages, Example Dialogs, Character Book data and visible Lorebook/LoreBary references. If structured character fields are also supplied, the web app merges them without overwriting non-empty page-extracted fields. assets is an array of { id?, url, label, source?, type? }; lorebooks is an array of { name, data }; cardDesign may contain { html, css }.
 
 ## Important implementation notes
 
