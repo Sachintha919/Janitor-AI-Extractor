@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#090d19">
 <meta name="description" content="A private JanitorAI Extractor workspace for importing accessible character definitions, images, Lorebook references and card previews.">
-<title>JanitorAI Extractor — Character Workspace</title>
+<title>JanitorAI Extractor — Extension Workspace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="icon" type="image/svg+xml" href="./assets/images/brand-icon.svg">
@@ -47,7 +47,23 @@
 <div class="download-row"><button class="button button-quiet" id="download-original" type="button" disabled>Download original source</button><button class="button button-quiet" id="download-session" type="button" disabled>Download complete session JSON</button></div>
 </section>
 <section class="panel-view" id="assets-panel" role="tabpanel" hidden><div class="section-title"><div><h2>Character assets</h2><p>Inspect character images, Lorebook references and other visible assets.</p></div><div class="download-group"><button class="button button-quiet" id="download-lorebook" type="button" disabled>↓ Lorebooks JSON</button><button class="button button-primary" id="download-assets-zip" type="button" disabled>↓ Download all ZIP</button></div></div><div id="asset-results"><div class="empty-card surface compact-empty"><div class="asset-icon asset-violet">▧</div><h3>No assets imported</h3><p>Import a supported source or local image file to display assets here.</p></div></div></section>
-<section class="panel-view" id="design-panel" role="tabpanel" hidden><div class="section-title"><div><h2>Character card design</h2><p>Edit the HTML and CSS you imported or received from the extension.</p></div><div class="download-group"><button class="button button-quiet" id="download-html" type="button" disabled>↓ HTML</button><button class="button button-quiet" id="download-css" type="button" disabled>↓ CSS</button></div></div><div class="design-editors"><label class="editor-card surface"><span>HTML SOURCE</span><textarea id="card-html" spellcheck="false" placeholder="Paste accessible character card HTML…"></textarea></label><label class="editor-card surface"><span>CSS SOURCE</span><textarea id="card-css" spellcheck="false" placeholder="Paste accessible character card CSS…"></textarea></label></div><div class="code-window surface"><div class="code-top"><span class="window-dots"><i></i><i></i><i></i></span><b>Bot card live preview</b><span class="code-label">SANDBOXED HTML · NO SCRIPTS</span></div><iframe id="card-preview" title="Character card HTML preview" sandbox=""></iframe></div><div class="info-note"><span>ⓘ</span> Preview is isolated in a sandbox. Imported scripts are not executed and the preview cannot access the parent application.</div></section>
+<section class="panel-view" id="design-panel" role="tabpanel" hidden>
+<div class="section-title">
+  <div><h2>Bot card code & live preview</h2><p>The complete generated HTML and CSS are shown here. Edit the code on the left and see the result update on the right.</p></div>
+  <div class="download-group"><button class="button button-quiet" id="regenerate-card-code" type="button">Regenerate from definitions</button><button class="button button-quiet" id="download-html" type="button" disabled>↓ HTML</button><button class="button button-quiet" id="download-css" type="button" disabled>↓ CSS</button></div>
+</div>
+<div class="card-code-layout">
+  <div class="card-code-column">
+    <label class="editor-card surface"><span>COMPLETE HTML SOURCE</span><textarea id="card-html" spellcheck="false" placeholder="Generated bot-card HTML will appear here…"></textarea></label>
+    <label class="editor-card surface"><span>COMPLETE CSS SOURCE</span><textarea id="card-css" spellcheck="false" placeholder="Generated bot-card CSS will appear here…"></textarea></label>
+  </div>
+  <section class="code-window surface card-preview-column">
+    <div class="code-top"><span class="window-dots"><i></i><i></i><i></i></span><b>Live bot-card preview</b><span class="code-label">LIVE · SANDBOXED</span></div>
+    <iframe id="card-preview" title="Character card HTML live preview" sandbox=""></iframe>
+  </section>
+</div>
+<div class="info-note"><span>ⓘ</span> Generated code updates with your character definitions until you edit it manually. HTML preview runs in an isolated sandbox with scripts disabled.</div>
+</section>
 </section>
 <section class="view" id="prompt-view">
 <div class="hero hero-compact"><div><div class="eyebrow"><span></span> SEPARATE CAPTURE WORKFLOW</div><h1>Prompt <em>capture.</em></h1><p class="hero-copy">The companion extension will intercept requests from your Janitor AI browser session, record the prompt body and return a mock OpenAI-compatible reply. No separate Node server or local Fake API process is needed.</p></div><div class="hero-stamp">API<br><small>INSPECTOR</small></div></div>
