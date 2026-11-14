@@ -130,6 +130,75 @@ export function extractJanitorSections(doc) {
   }
   return {character,extraFields};
 }
+function parseJanitorBootState(doc,sourceUrl="") {
+  const states=[];
+  const parseNested=(raw)=>{
+    try { const value=JSON.parse(raw); if(isObject(value)||Array.isArray(value)) return value; } catch {}
+    const match=String(raw).match(/JSON\.parse\(\s*("(?:\\.|[^"\\])*")\s*\)/);
+    if(match) {
+      try { const decoded=JSON.parse(match[1]); const value=JSON.parse(decoded); if(isObject(value)||Array.isArray(value)) return value; } catch {}
+    }
+    return null;
+  };
+  for(const script of doc.querySelectorAll("script")) {
+    const raw=script.textContent||"";
+    if(!raw||raw.length>2_800_000) continue;
+    const value=parseNested(raw);
+    if(value) states.push(value);
+  }
+  const routeId=(sourceUrl.match(/\/characters?\/([0-9a-f]{8}-[0-9a-f-]{27,})/i)||[])[1]?.toLowerCase()||"";
+  const queue=states.map(value=>({value,depth:0})),seen=new WeakSet();
+  let best=null,scoreBest=-1;
+  while(queue.length) {
+    const {value,depth}=queue.shift();
+    if(!value||typeof value!=="object"||seen.has(value)||depth>18) continue;
+    seen.add(value);
+    if(Array.isArray(value)) {
+      for(const child of value) if(child&&typeof child==="object") queue.push({value:child,depth:depth+1});
+      continue;
+    }
+    if(Array.isArray(value.scripts)) {
+      const isLikelyCharacter=Boolean(value.name&&(value.personality!==undefined||value.scenario!==undefined||value.first_message!==undefined||value.description!==undefined));
+      if(isLikelyCharacter) {
+        let score=1+Math.min(value.scripts.length,5);
+        if(routeId&&String(value.id||"").toLowerCase()===routeId) score+=100;
+        if(score>scoreBest) {best=value;scoreBest=score;}
+      }
+    }
+    for(const child of Object.values(value)) if(child&&typeof child==="object") queue.push({value:child,depth:depth+1});
+  }
+  if(!best) return {character:{},lorebooks:[]};
+  const character={};
+  const assign=(key,value)=>{if(value!==undefined&&value!==null&&value!=="")character[key]=cloneData(value);};
+  assign("name",best.name);
+  assign("description",best.description);
+  assign("personality",best.personality);
+  assign("scenario",best.scenario);
+  assign("first_mes",best.first_message??best.first_messages?.[0]??"");
+  assign("alternate_greetings",best.alternate_greetings);
+  assign("mes_example",best.example_dialogs);
+  const lorebooks=(best.scripts||[])
+    .filter(item=>item&&String(item.type||"").toLowerCase()==="lorebook"&&item.id)
+    .map(item=>({
+      name:item.title||"Janitor AI Lorebook",
+      data:{
+        kind:"janitor-script-reference",
+        id:String(item.id),
+        type:"lorebook",
+        title:item.title||"Janitor AI Lorebook",
+        description:item.description||"",
+        isPublic:item.is_public===true,
+        ownerId:item.user_id||null,
+        ownerName:item.user_name||"",
+        updatedAt:item.updated_at||item.updatedAt||null,
+        messageCount:item.message_count??null,
+        url:new URL("/scripts/"+encodeURIComponent(String(item.id)),sourceUrl||doc.baseURI).href,
+        entriesIncluded:false
+      },
+      source:"Janitor AI character's embedded Scripts list"
+    }));
+  return {character,lorebooks};
+}
 function parseHtml(raw,sourceUrl="") {
   const result={object:null,html:"",css:"",assets:[],lorebooks:[],meta:{},sections:{character:{},extraFields:{}}};
   if(typeof DOMParser==="undefined"||!/<(?:html|body|div|section|article|main)\b/i.test(raw)) return result;
@@ -137,11 +206,11 @@ function parseHtml(raw,sourceUrl="") {
   for(const script of doc.querySelectorAll('script[type="application/json"],script#__NEXT_DATA__,script#__NUXT_DATA__')) {
     try { const value=JSON.parse(script.textContent||""); if(isObject(value)) { result.object=value; break; } } catch {}
   }
-  const title=doc.querySelector('meta[property="og:title"]')?.content||doc.title;
+  result.janitorState=parseJanitorBootState(doc,sourceUrl);\n  const title=doc.querySelector('meta[property="og:title"]')?.content||doc.title;
   const description=doc.querySelector('meta[name="description"]')?.content||doc.querySelector('meta[property="og:description"]')?.content;
   if(title) result.meta.name=title;
   if(description) result.meta.description=description;
-  result.sections=extractJanitorSections(doc);
+  result.sections=extractJanitorSections(doc);\n  Object.assign(result.sections.character,result.janitorState?.character||{});\n  result.lorebooks.push(...(result.janitorState?.lorebooks||[]));
   const seenBooks=new Set();
   for(const badge of doc.querySelectorAll('[class*="typeBadge"], [class*="TypeBadge"]')) {
     if(String(badge.textContent||"").trim().toLowerCase()!=="lorebook") continue;
