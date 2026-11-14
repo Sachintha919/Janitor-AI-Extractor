@@ -4,7 +4,7 @@ import {downloadBlob,downloadText,safeFilename,zipStore} from "./utils/download.
 
 const $=selector=>document.querySelector(selector),$$=selector=>[...document.querySelectorAll(selector)];
 const state={character:{},extraFields:{},original:null,assets:[],lorebooks:[],sources:[],card:{html:"",css:""},sourceUrl:"",importedAt:null,captures:[],selectedCapture:null};
-let bridge=null,captureEnabled=false,toastTimer=0;
+let bridge=null,captureEnabled=false,toastTimer=0,autoCardCode=true;
 
 function toast(message) {const el=$("#toast");el.textContent=message;el.classList.add("is-visible");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("is-visible"),3200);}
 function esc(value) {return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -42,16 +42,34 @@ function renderAssets() {
   if(!assets.length&&!books.length){$("#asset-results").innerHTML='<div class="empty-card surface compact-empty"><div class="asset-icon asset-violet">▧</div><h3>No assets imported</h3><p>Import a supported source or local image file to display assets here.</p></div>';return;}
   const imageHtml=assets.map((asset,i)=>'<article class="asset-card surface"><div class="asset-preview-wrap"><img class="asset-thumb" src="'+esc(asset.url)+'" alt="'+esc(asset.label||"Image")+'" loading="lazy" referrerpolicy="no-referrer"></div><h3>'+esc(asset.label||"Image")+'</h3><p class="asset-url">'+esc(asset.url.length>150?asset.url.slice(0,147)+"…":asset.url)+'</p><div class="asset-actions"><button class="button button-quiet" data-asset="'+i+'" type="button">Download image</button><a class="text-link" href="'+esc(asset.url)+'" target="_blank" rel="noopener noreferrer">Open source</a></div></article>').join("");
   const bookHtml=books.map((book,i)=>{
-    const isReference=book.data?.kind==="visible-lorebook-reference"||book.data?.kind==="lorebook-link";
-    const description=book.data?.description||book.data?.note||(isReference?(book.data?.url?"A visible Lorebook / LoreBary reference. Open the source to view its full content.":"The character page shows this Lorebook reference, but not its entry list."):"Lorebook / world-info data.");
-    const sourceUrl=isReference&&String(book.data?.url||"").startsWith("http")
-      ?'<a class="text-link" href="'+esc(book.data.url)+'" target="_blank" rel="noopener noreferrer">Open source</a>'
+    const data=book.data||{};
+    const isScriptReference=data.kind==="janitor-script-reference";
+    const isReference=isScriptReference||data.kind==="visible-lorebook-reference"||data.kind==="lorebook-link";
+    const entries=Array.isArray(data.entries)?data.entries:[];
+    const description=data.description||data.note||(isReference?(data.url?"A Lorebook is attached to this character. Import its accessible Script page to read its entries.":"The page shows a Lorebook reference, but its entry list is not included here."):"Lorebook data.");
+    const sourceUrl=isReference&&String(data.url||"").startsWith("http")
+      ?'<a class="text-link" href="'+esc(data.url)+'" target="_blank" rel="noopener noreferrer">Open page</a>'
       :"";
-    return '<article class="asset-card surface"><div class="asset-icon asset-teal">▤</div><h3>'+esc(book.name||"Lorebook")+'</h3><p>'+esc(description)+'</p><div class="asset-actions">'+sourceUrl+'<button type="button" class="button button-quiet" data-book="'+i+'">'+(isReference?"Download reference":"Download JSON")+'</button></div></article>';
+    const importButton=isScriptReference&&data.id
+      ?'<button type="button" class="button button-primary" data-import-lorebook="'+esc(data.id)+'" data-book-index="'+i+'">Import full entries</button>'
+      :"";
+    const countLabel=Array.isArray(data.entries)?'<small class="field-availability is-available">'+entries.length+' entries imported</small>':(isScriptReference?'<small class="field-availability">'+(data.isPublic?"Public script · entries not imported yet":"Script reference · access checked when opened")+'</small>':"");
+    const entryView=entries.length
+      ?'<details class="lorebook-entry-details"><summary>View all entries ('+entries.length+')</summary><pre>'+esc(JSON.stringify(entries,null,2))+'</pre></details>'
+      :"";
+    return '<article class="asset-card surface"><div class="asset-icon asset-teal">▤</div><h3>'+esc(book.name||"Lorebook")+'</h3>'+countLabel+'<p>'+esc(description)+'</p>'+entryView+'<div class="asset-actions">'+sourceUrl+importButton+'<button type="button" class="button button-quiet" data-book="'+i+'">Download JSON</button></div></article>';
   }).join("");
   $("#asset-results").innerHTML='<div class="asset-grid">'+imageHtml+bookHtml+"</div>";
   $$("[data-asset]").forEach(button=>button.addEventListener("click",async()=>{const asset=assets[Number(button.dataset.asset)];try{const response=await fetch(asset.url,{mode:"cors",credentials:"omit"});if(!response.ok)throw new Error("HTTP "+response.status);const blob=await response.blob();const ext=(asset.url.match(/\.(png|jpe?g|gif|webp|avif|svg)(?:[?#]|$)/i)||[])[1]||"img";downloadBlob(safeFilename(asset.label)+"."+ext,blob);}catch{window.open(asset.url,"_blank","noopener,noreferrer");toast("Direct download was blocked; opened the source instead.");}}));
-  $$("[data-book]").forEach(button=>button.addEventListener("click",()=>{const book=books[Number(button.dataset.book)];downloadText(safeFilename(book.name||"lorebook")+".json",JSON.stringify(book.data,null,2),"application/json;charset=utf-8");}));
+  $("[data-book]").forEach(button=>button.addEventListener("click",()=>{const book=books[Number(button.dataset.book)];downloadText(safeFilename(book.name||"lorebook")+".json",JSON.stringify(book.data,null,2),"application/json;charset=utf-8");}));
+  $("[data-import-lorebook]").forEach(button=>button.addEventListener("click",()=>{
+    const book=books[Number(button.dataset.bookIndex)];
+    if(!bridge?.send("IMPORT_LOREBOOK",{scriptId:button.dataset.importLorebook,title:book?.name||"Lorebook"})){
+      toast("Connect the JanitorAI Extractor extension first.");return;
+    }
+    button.disabled=true;button.textContent="Opening Lorebook…";
+    toast("Opening the Lorebook Script page to import its accessible entries.");
+  }));
 }
 function previewText(value) {
   return esc(valueText(value)).replace(/\\r?\\n/g,"<br>");
@@ -104,10 +122,19 @@ function getPreviewDocument() {
   return '<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src https: data:; style-src \'unsafe-inline\' https:; font-src https: data:;"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body>'+markup+'</body></html>';
 }
 function updateCard() {
+  if(autoCardCode) {
+    $("#card-html").value=generatedBotCardMarkup();
+    $("#card-css").value=PREVIEW_CSS;
+  }
   state.card.html=$("#card-html").value;state.card.css=$("#card-css").value;
   $("#card-preview").srcdoc=getPreviewDocument();
   setEnabled(["download-html"],Boolean(state.card.html.trim()||Object.keys(state.character).length));
   setEnabled(["download-css"],Boolean(state.card.css));
+}
+function regenerateCardCode() {
+  autoCardCode=true;
+  updateCard();
+  toast("Complete bot-card HTML and CSS regenerated from the current definitions.");
 }
 function refresh() {
   renderDefinitions();renderAssets();$("#card-html").value=state.card.html;$("#card-css").value=state.card.css;updateCard();
@@ -125,7 +152,7 @@ function applyImport(result) {
   state.assets.push(...(result.assets||[]));state.lorebooks.push(...(result.lorebooks||[]));
   state.assets=[...new Map(state.assets.map(item=>[item.url,item])).values()];
   state.lorebooks=[...new Map(state.lorebooks.map(item=>[(item.name||"book")+JSON.stringify(item.data),item])).values()];
-  if(result.html&&isUsableCardMarkup(result.html)){state.card.html=result.html;if(result.css)state.card.css=result.css;}if(result.sourceUrl)state.sourceUrl=result.sourceUrl;
+  if(result.html&&isUsableCardMarkup(result.html)){state.card.html=result.html;if(result.css)state.card.css=result.css;autoCardCode=false;}else if(!state.card.html)autoCardCode=true;if(result.sourceUrl)state.sourceUrl=result.sourceUrl;
   if(result.rawText!==undefined)state.sources.push({name:result.sourceName||"Imported source",content:result.rawText,type:result.rawType||"text"});
   state.importedAt=new Date().toISOString();snapshot();refresh();
   message("parse-message","Import complete: "+(Object.keys(state.character).length+Object.keys(state.extraFields).length)+" definition field(s), "+state.assets.length+" image(s), "+state.lorebooks.length+" lorebook(s).");
@@ -157,7 +184,7 @@ function restoreOriginal() {
   state.assets=cloneData(state.original.assets)||[];state.lorebooks=cloneData(state.original.lorebooks)||[];state.card=cloneData(state.original.card)||{html:"",css:""};refresh();toast("Restored the original imported data.");
 }
 function reset() {
-  state.character={};state.extraFields={};state.original=null;state.assets=[];state.lorebooks=[];state.sources=[];state.card={html:"",css:""};state.sourceUrl="";state.importedAt=null;
+  state.character={};state.extraFields={};state.original=null;state.assets=[];state.lorebooks=[];state.sources=[];state.card={html:"",css:""};autoCardCode=true;state.sourceUrl="";state.importedAt=null;
   $("#source-data").value="";$("#source-file").value="";$("#parse-message").classList.remove("is-visible");refresh();toast("Current extraction session cleared.");
 }
 function makeCharacterCard() {
@@ -202,6 +229,19 @@ function extensionStatus(info) {
 }
 function extensionMessage(event) {
   const p=event.payload||{};
+  if(event.type==="LOREBOOK_DATA") {
+    const imported=p.lorebook||p;
+    if(!imported||!Array.isArray(imported.entries)) {
+      toast(String(p.message||"The Lorebook page did not expose its entries."));
+      return;
+    }
+    const id=String(imported.id||p.scriptId||"");
+    const book={name:imported.title||imported.name||"Janitor AI Lorebook",data:{...imported,kind:"janitor-lorebook",id,entries:imported.entries},source:"Accessible Janitor AI Script page"};
+    state.lorebooks=[...state.lorebooks.filter(old=>String(old.data?.id||"")!==id),book];
+    state.importedAt=new Date().toISOString();snapshot();refresh();
+    toast("Lorebook imported: "+imported.entries.length+" entries.");
+    return;
+  }
   if(event.type==="CAPTURED_REQUEST") {try{addCapture(p);toast("Janitor AI request captured.");}catch(error){toast(error.message);}}
   if(event.type==="CHARACTER_DATA") {
     const rawPage=p.html||p.pageHtml||p.pageSource||p.character||p.definitions||p.data||{};
@@ -247,7 +287,8 @@ function init() {
     state.lorebooks.forEach((book,i)=>files.push({name:"lorebooks/"+safeFilename(book.name||"book-"+i)+".json",data:new TextEncoder().encode(JSON.stringify(book.data,null,2))}));
     if(!files.length){toast("No assets could be bundled; some image hosts block downloads.");return;}downloadBlob("character-assets.zip",zipStore(files));toast("ZIP created with "+files.length+" file(s).");
   });
-  $("#card-html").addEventListener("input",updateCard);$("#card-css").addEventListener("input",updateCard);
+  $("#card-html").addEventListener("input",()=>{autoCardCode=false;updateCard();});$("#card-css").addEventListener("input",()=>{autoCardCode=false;updateCard();});
+  $("#regenerate-card-code").addEventListener("click",regenerateCardCode);
   $("#download-html").addEventListener("click",()=>downloadText("character-card-preview.html",getPreviewDocument(),"text/html;charset=utf-8"));
   $("#download-css").addEventListener("click",()=>downloadText("character-card.css",state.card.css,"text/css;charset=utf-8"));
   $("#start-capture").addEventListener("click",()=>{if(!bridge?.send("SET_CAPTURE_ENABLED",{enabled:true})){toast("The companion extension is not connected.");return;}captureEnabled=true;badge($("#capture-status"),"Listening for requests","success");updateCaptureControls();});
